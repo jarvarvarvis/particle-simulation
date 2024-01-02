@@ -1,6 +1,6 @@
 #include "shader.h"
 
-#include "../thirdparty/c_log.h"
+#include "../../thirdparty/c_log.h"
 
 Shader shader_new(GLenum type) {
     GLuint handle = glCreateShader(type);

@@ -6,7 +6,7 @@
 #include <GL/glew.h>
 #include <GL/gl.h>
 
-#include "../thirdparty/c_math2d.h"
+#include "../../thirdparty/c_math2d.h"
 
 typedef struct {
     GLuint handle;

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 #include "../thirdparty/c_log.h"
@@ -27,6 +28,11 @@ int main() {
     if (!window) {
         c_log(C_LOG_SEVERITY_ERROR, "Failed to create glfw window");
         glfwTerminate();
+        exit(EXIT_FAILURE);
+    }
+
+    if (glewInit() != GLEW_OK) {
+        c_log(C_LOG_SEVERITY_ERROR, "Failed to initialize GLEW");
         exit(EXIT_FAILURE);
     }
 

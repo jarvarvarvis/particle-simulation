@@ -78,6 +78,25 @@ int shader_program_log_status(ShaderProgram *shader_program) {
     return success;
 }
 
+GLint shader_program_get_uniform_location(ShaderProgram *shader_program, char *name) {
+    return glGetUniformLocation(shader_program->handle, name);
+}
+
+void shader_program_set_bool(ShaderProgram *shader_program, char *name, bool value) {
+    GLint location = shader_program_get_uniform_location(shader_program, name);
+    glUniform1i(location, value);
+}
+
+void shader_program_set_int(ShaderProgram *shader_program, char *name, int value) {
+    GLint location = shader_program_get_uniform_location(shader_program, name);
+    glUniform1i(location, value);
+}
+
+void shader_program_set_float(ShaderProgram *shader_program, char *name, float value) {
+    GLint location = shader_program_get_uniform_location(shader_program, name);
+    glUniform1i(location, value);
+}
+
 void shader_program_delete(ShaderProgram *shader_program) {
     glDeleteProgram(shader_program->handle);
 }

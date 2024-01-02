@@ -6,6 +6,10 @@ Vao vao_new() {
     return (Vao) { handle };
 }
 
+void vao_bind(Vao *vao) {
+    glBindVertexArray(vao->handle);
+}
+
 void vao_delete(Vao *vao) {
     glDeleteVertexArrays(1, &vao->handle);
 }

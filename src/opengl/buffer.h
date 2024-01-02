@@ -8,9 +8,9 @@ typedef struct {
     GLuint handle;
 } Buffer;
 
-Buffer buffer_null(GLenum target);
 Buffer buffer_new(GLenum target);
 void buffer_bind(Buffer *buffer);
+void buffer_upload_data_static(Buffer *buffer, void *data, size_t size);
 void buffer_delete(Buffer *buffer);
 
 #endif /* BUFFER_H */

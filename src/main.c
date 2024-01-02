@@ -31,13 +31,13 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwMakeContextCurrent(window);
+
     if (glewInit() != GLEW_OK) {
         c_log(C_LOG_SEVERITY_ERROR, "Failed to initialize GLEW");
         exit(EXIT_FAILURE);
     }
-
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwMakeContextCurrent(window);
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);

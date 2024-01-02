@@ -56,6 +56,13 @@ typedef enum {
 #define C_LOG_ANSI_BOLD_GREEN  "\033[92;1m"
 #define C_LOG_ANSI_BOLD_YELLOW "\033[93;1m"
 
+
+#ifndef C_LOG_DEFINITION
+
+bool c_log_should_show_severity(CLogSeverity severity);
+int c_log(CLogSeverity severity, const char* format, ...);
+
+#else
 bool c_log_should_show_severity(CLogSeverity severity) {
     return severity >= C_LOG_MIN_SEVERITY;
 }
@@ -137,5 +144,7 @@ int c_log(CLogSeverity severity, const char* format, ...) {
     free(message_str);
     return length;
 }
+
+#endif /* C_LOG_DEFINITION */
 
 #endif /* _C_LOG_HEADER */

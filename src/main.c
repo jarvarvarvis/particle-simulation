@@ -9,6 +9,11 @@ void error_callback(int error, const char *description) {
     c_log(C_LOG_SEVERITY_ERROR, "%s (Code: %d)", description, error);
 }
 
+void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
+    glViewport(0, 0, width, height);
+    c_log(C_LOG_SEVERITY_DEBUG, "Window resize: %d,%d", width, height);
+}
+
 int main() {
     if (!glfwInit()) {
         c_log(C_LOG_SEVERITY_ERROR, "Failed to initialize glfw");
@@ -23,6 +28,17 @@ int main() {
         c_log(C_LOG_SEVERITY_ERROR, "Failed to create glfw window");
         glfwTerminate();
         exit(EXIT_FAILURE);
+    }
+
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwMakeContextCurrent(window);
+
+    while (!glfwWindowShouldClose(window)) {
+        glClear(GL_COLOR_BUFFER_BIT);
+        glClearColor(0.0, 0.0, 0.0, 1.0);
+
+        glfwSwapBuffers(window);
+        glfwPollEvents();
     }
 
     glfwDestroyWindow(window);

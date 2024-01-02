@@ -7,6 +7,9 @@
 #define C_LOG_DEFINITION
 #include "../thirdparty/c_log.h"
 
+#define C_MATH2D_DEFINITION
+#include "../thirdparty/c_math2d.h"
+
 void error_callback(int error, const char *description) {
     c_log(C_LOG_SEVERITY_ERROR, "%s (Code: %d)", description, error);
 }

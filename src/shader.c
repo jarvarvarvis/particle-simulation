@@ -97,6 +97,11 @@ void shader_program_set_float(ShaderProgram *shader_program, char *name, float v
     glUniform1i(location, value);
 }
 
+void shader_program_set_mat4(ShaderProgram *shader_program, char *name, cm2_mat4 value) {
+    GLint location = shader_program_get_uniform_location(shader_program, name);
+    glUniformMatrix4fv(location, 1, GL_FALSE, cm2_mat4_value_ptr(value));
+}
+
 void shader_program_delete(ShaderProgram *shader_program) {
     glDeleteProgram(shader_program->handle);
 }

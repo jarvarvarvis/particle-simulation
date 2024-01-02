@@ -4,6 +4,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#define C_LOG_DEFINITION
 #include "../thirdparty/c_log.h"
 
 void error_callback(int error, const char *description) {
@@ -22,6 +23,9 @@ int main() {
     }
 
     glfwSetErrorCallback(error_callback);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     GLFWwindow *window = glfwCreateWindow(800, 600, "particle-simulation",
             NULL, NULL);
 

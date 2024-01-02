@@ -10,6 +10,8 @@
 #define C_MATH2D_DEFINITION
 #include "../thirdparty/c_math2d.h"
 
+#include "particle/renderer.h"
+
 void error_callback(int error, const char *description) {
     c_log(C_LOG_SEVERITY_ERROR, "%s (Code: %d)", description, error);
 }
@@ -46,6 +48,8 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
+    ParticleRenderer renderer = particle_renderer_new();
+
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
         glClearColor(0.0, 0.0, 0.0, 1.0);
@@ -53,6 +57,8 @@ int main() {
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
+    particle_renderer_delete(&renderer);
 
     glfwDestroyWindow(window);
     glfwTerminate();

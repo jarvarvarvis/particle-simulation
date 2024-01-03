@@ -1,5 +1,7 @@
 #include "grid_cell.h"
 
+#include "../../thirdparty/c_log.h"
+
 ParticleGridCell particle_grid_cell_new() {
     ParticleGridCell cell;
     cell.indices_len = 0;
@@ -28,17 +30,23 @@ void particle_grid_cell_push(ParticleGridCell *cell, long index) {
     }
 
     // Find the next free index
-    size_t next_free_index = 0;
+    bool free_index_found = false;
+    size_t next_free_index;
     for (size_t i = 0; i < cell->indices_len; ++i) {
         if (cell->indices[i] == PARTICLE_GRID_CELL_EMPTY) {
             next_free_index = i;
+            free_index_found = true;
+            break;
         }
     }
+
+    // If no free index was found, insert at the end
+    if (!free_index_found) next_free_index = cell->indices_len;
 
     cell->indices[next_free_index] = index;
 
     // If the index was added at the end of the list, increment the length counter
-    if (next_free_index == cell->indices_len - 1) {
+    if (next_free_index == cell->indices_len) {
         cell->indices_len++;
     }
 }

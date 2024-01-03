@@ -79,17 +79,19 @@ int main() {
     // Register debug callback
     debug_register_message_callback();
 
+    // Create renderer, particle list and solver
     ParticleRenderer renderer = particle_renderer_new();
+    
     ParticleList particles = particle_list_new();
-
-    // Generate a few random particles
-    struct timespec time;
-    clock_gettime(CLOCK_REALTIME, &time);
-    srand(time.tv_nsec);
+    ParticleIterator iterator = particle_list_iterate(&particles);
 
     const float SOLVER_DT = 0.02;
     Solver solver = solver_new();
-    ParticleIterator iterator = particle_list_iterate(&particles);
+    
+    // Initialize RNG
+    struct timespec time;
+    clock_gettime(CLOCK_REALTIME, &time);
+    srand(time.tv_nsec);
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
@@ -115,6 +117,7 @@ int main() {
         glfwPollEvents();
     }
 
+    particle_iterator_delete(&iterator);
     particle_list_delete(&particles);
     particle_renderer_delete(&renderer);
 

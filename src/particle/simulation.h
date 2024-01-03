@@ -1,15 +1,20 @@
 #ifndef SIMULATION_H
 #define SIMULATION_H
 
+#include <stdbool.h>
+
+#include "constraint.h"
 #include "iterator.h"
 
 #include "../../thirdparty/c_math2d.h"
 
 typedef struct {
     cm2_vec2 gravity;
+    Constraint *constraint;
 } Solver;
 
 Solver solver_new();
 void solver_update(Solver *solver, ParticleIterator *iterator, float dt);
+void solver_delete(Solver *solver);
 
 #endif /* SIMULATION_H */

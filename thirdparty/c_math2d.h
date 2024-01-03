@@ -46,6 +46,8 @@ static const cm2_mat4 CM2_MAT4_IDENTITY = {
 cm2_vec2 cm2_vec2_new(float x, float y);
 cm2_vec4 cm2_vec4_new(float x, float y, float z, float w);
 
+cm2_vec2 cm2_vec2_dot(cm2_vec2 first, cm2_vec2 second);
+float cm2_vec2_dist(cm2_vec2 vec);
 cm2_vec2 cm2_vec2_additive_inv(cm2_vec2 vec);
 cm2_vec2 cm2_vec2_add(cm2_vec2 first, cm2_vec2 second);
 cm2_vec2 cm2_vec2_sub(cm2_vec2 first, cm2_vec2 second);
@@ -80,6 +82,14 @@ cm2_vec4 cm2_vec4_new(float x, float y, float z, float w) {
     v.z = z;
     v.w = w;
     return v;
+}
+
+float cm2_vec2_dot(cm2_vec2 first, cm2_vec2 second) {
+    return first.x * second.x + first.y * second.y;
+}
+
+float cm2_vec2_dist(cm2_vec2 vec) {
+    return sqrtf(cm2_vec2_dot(vec, vec));
 }
 
 cm2_vec2 cm2_vec2_additive_inv(cm2_vec2 vec) {

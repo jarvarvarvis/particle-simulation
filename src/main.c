@@ -87,28 +87,33 @@ int main() {
 
     const float SOLVER_DT = 0.02;
     Solver solver = solver_new();
+    solver.constraint = circular_constraint_new(cm2_vec2_new(0.0, 0.0), 400.0f);
     
     // Initialize RNG
     struct timespec time;
     clock_gettime(CLOCK_REALTIME, &time);
     srand(time.tv_nsec);
 
+    int particles_left_to_spawn = 300;
+
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
         glClearColor(0.0, 0.0, 0.0, 1.0);
 
-        {
-            float x = (frand() * 2.0 - 1.0) * (user_data.window_width / 2.0);
-            float y = (frand() * 2.0 - 1.0) * (user_data.window_height / 2.0);
+        // Spawn particles
+        if (particles_left_to_spawn > 0) {
+            float x = (frand() * 2.0 - 1.0) * 200.0;
             particle_list_push(&particles,
-                particle_new(x, y, frand() * 9.0 + 1.0, frand(), frand(), frand(), 1.0)
+                particle_new(x, 0.0, frand() * 9.0 + 1.0, frand(), frand(), frand(), 1.0)
             );
+            particles_left_to_spawn--;
         }
 
+        // Update solver and upload data to GPU
         solver_update(&solver, &iterator, SOLVER_DT);
-
         particle_renderer_upload_from_list(&renderer, &particles);
 
+        // Draw
         shader_program_use(&renderer.shader_program);
         shader_program_set_mat4(&renderer.shader_program, "_MProj", user_data.camera.projection_matrix);
         particle_renderer_draw(&renderer);
@@ -117,6 +122,7 @@ int main() {
         glfwPollEvents();
     }
 
+    solver_delete(&solver);
     particle_iterator_delete(&iterator);
     particle_list_delete(&particles);
     particle_renderer_delete(&renderer);

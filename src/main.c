@@ -109,8 +109,8 @@ int main() {
     // Particle spawning
     struct timespec start_timer;
     clock_gettime(CLOCK_REALTIME, &start_timer);
-    float particle_spawn_time_interval = 30.0;
-    int particles_left_to_spawn = 300;
+    float particle_spawn_time_interval = 2.0;
+    int particles_left_to_spawn = 1000;
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
@@ -123,9 +123,9 @@ int main() {
             float elapsed_millis = time_diff_ms(start_timer, current_timer);
             if (elapsed_millis > particle_spawn_time_interval) {
                 // Create random particle
-                Particle particle = particle_new(0.0, 0.0, 10.0, frand(), frand(), frand(), 1.0);
+                Particle particle = particle_new(0.0, 0.0, 5.0, frand(), frand(), frand(), 1.0);
 
-                // Add some random velocity in circle around center
+                // Add velocity around circle, based on counter (achieves spiral motion)
                 particle.position.x += sinf((float)particles_left_to_spawn * 0.1) * 2.0;
                 particle.position.y += cosf((float)particles_left_to_spawn * 0.1) * 2.0;
 

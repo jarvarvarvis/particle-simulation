@@ -29,9 +29,7 @@ void solver_update_positions_and_apply_constraints(Solver *solver, ParticleItera
         Constraint *constraint = solver->constraint;
         if (constraint) {
             // If the particle is outside the constraint, move it back
-            if (constraint->is_outside(constraint, iter_curr)) {
-                constraint->apply(constraint, iter_curr);
-            }
+            constraint->apply(constraint, iter_curr);
         }
     }
 }

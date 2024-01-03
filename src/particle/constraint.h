@@ -7,12 +7,10 @@
 
 struct Constraint;
 
-typedef bool (*OutsideConstraintFn)(struct Constraint *constraint, Particle *particle);
 typedef void (*ApplyConstraintFn)(struct Constraint *constraint, Particle *particle);
 
 struct Constraint {
     void *data;
-    OutsideConstraintFn is_outside;
     ApplyConstraintFn apply;
 };
 
@@ -27,5 +25,13 @@ typedef struct {
 } CircularConstraint;
 
 Constraint *circular_constraint_new(cm2_vec2 center, float radius);
+
+
+typedef struct {
+    cm2_vec2 min;
+    cm2_vec2 max;
+} BoxConstraint;
+
+Constraint *box_constraint_new(cm2_vec2 min, cm2_vec2 max);
 
 #endif /* CONSTRAINT_H */

@@ -16,6 +16,7 @@
 #include "camera/orthographic.h"
 #include "particle/renderer.h"
 #include "particle/simulation.h"
+#include "particle/constraint.h"
 
 typedef struct {
     OrthoCamera camera;
@@ -94,7 +95,11 @@ int main() {
     const float SOLVER_SUB_STEPS = 8;
     const float SOLVER_DT = 0.01;
     Solver solver = solver_new(SOLVER_SUB_STEPS);
-    solver.constraint = circular_constraint_new(cm2_vec2_new(0.0, 0.0), 400.0f);
+    //solver.constraint = circular_constraint_new(cm2_vec2_new(0.0, 0.0), 400.0f);
+    solver.constraint = box_constraint_new(
+        cm2_vec2_new(-400.0, -400.0),
+        cm2_vec2_new(400.0, 400.0)
+    );
 
     // Initialize RNG
     struct timespec time;
@@ -118,8 +123,7 @@ int main() {
             float elapsed_millis = time_diff_ms(start_timer, current_timer);
             if (elapsed_millis > particle_spawn_time_interval) {
                 // Create random particle
-                float x = (frand() * 2.0 - 1.0) * 2.0;
-                Particle particle = particle_new(x, 100.0, 10.0, frand(), frand(), frand(), 1.0);
+                Particle particle = particle_new(0.0, 0.0, 10.0, frand(), frand(), frand(), 1.0);
 
                 // Add some random velocity in circle around center
                 particle.position.x += sinf((float)particles_left_to_spawn * 0.1) * 2.0;

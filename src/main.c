@@ -95,7 +95,7 @@ int main() {
     clock_gettime(CLOCK_REALTIME, &time);
     srand(time.tv_nsec);
 
-    int particles_left_to_spawn = 500;
+    int particles_left_to_spawn = 800;
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);

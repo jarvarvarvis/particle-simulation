@@ -1,4 +1,4 @@
-#include "grid.h"
+#include "grid_cell.h"
 
 ParticleGridCell particle_grid_cell_new() {
     ParticleGridCell cell;

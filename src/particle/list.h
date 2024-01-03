@@ -5,6 +5,11 @@
 #include "particle.h"
 #include "iterator.h"
 
+
+#ifndef PARTICLE_LIST_INITIAL_CAP
+#define PARTICLE_LIST_INITIAL_CAP 16
+#endif /* PARTICLE_LIST_INITIAL_CAP */
+
 typedef struct {
     Particle *buffer;
     size_t buffer_len, buffer_cap;

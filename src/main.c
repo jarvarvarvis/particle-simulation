@@ -85,8 +85,9 @@ int main() {
     ParticleList particles = particle_list_new();
     ParticleIterator iterator = particle_list_iterate(&particles);
 
-    const float SOLVER_DT = 0.02;
-    Solver solver = solver_new();
+    const float SOLVER_SUB_STEPS = 2;
+    const float SOLVER_DT = 0.01;
+    Solver solver = solver_new(SOLVER_SUB_STEPS);
     solver.constraint = circular_constraint_new(cm2_vec2_new(0.0, 0.0), 400.0f);
     
     // Initialize RNG
@@ -102,9 +103,9 @@ int main() {
 
         // Spawn particles
         if (particles_left_to_spawn > 0) {
-            float x = (frand() * 2.0 - 1.0) * 200.0;
+            float x = (frand() * 2.0 - 1.0) * 0.5;
             particle_list_push(&particles,
-                particle_new(x, 0.0, frand() * 10.0 + 3.0, frand(), frand(), frand(), 1.0)
+                particle_new(x, 200.0, frand() * 10.0 + 5.0, frand(), frand(), frand(), 1.0)
             );
             particles_left_to_spawn--;
         }

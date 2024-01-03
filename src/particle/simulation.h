@@ -9,11 +9,12 @@
 #include "../../thirdparty/c_math2d.h"
 
 typedef struct {
+    size_t sub_steps;
     cm2_vec2 gravity;
     Constraint *constraint;
 } Solver;
 
-Solver solver_new();
+Solver solver_new(size_t sub_steps);
 void solver_update(Solver *solver, ParticleIterator *iterator, float dt);
 void solver_delete(Solver *solver);
 

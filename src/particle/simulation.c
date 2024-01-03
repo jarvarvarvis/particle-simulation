@@ -4,26 +4,27 @@
 
 #include "../../thirdparty/c_log.h"
 
-Solver solver_new() {
+Solver solver_new(size_t sub_steps) {
     Solver solver;
+    solver.sub_steps = sub_steps;
     solver.gravity = cm2_vec2_new(0.0, -1000.0);
     solver.constraint = NULL;
     return solver;
 }
 
 void solver_apply_gravity(Solver *solver, ParticleIterator *iterator) {
+    iterator->reset(iterator);
     Particle *iter_curr;
 
-    iterator->reset(iterator);
     while ((iter_curr = iterator->advance(iterator))) {
         particle_accelerate(iter_curr, solver->gravity);
     }
 }
 
 void solver_update_positions_and_apply_constraints(Solver *solver, ParticleIterator *iterator, float dt) {
+    iterator->reset(iterator);
     Particle *iter_curr;
 
-    iterator->reset(iterator);
     while ((iter_curr = iterator->advance(iterator))) {
         particle_update_position(iter_curr, dt);
 
@@ -38,13 +39,13 @@ void solver_update_positions_and_apply_constraints(Solver *solver, ParticleItera
 }
 
 void solver_solve_collisions(Solver *solver, ParticleIterator *iterator) {
+    iterator->reset(iterator);
     Particle *iter_1;
 
     // Create copy of iterator
     ParticleIterator iterator_copy = iterator->copy(iterator);
 
     int particles_handled = 0;
-    iterator->reset(iterator);
     while ((iter_1 = iterator->advance(iterator))) {
         particles_handled++;
 
@@ -75,14 +76,18 @@ void solver_solve_collisions(Solver *solver, ParticleIterator *iterator) {
 }
 
 void solver_update(Solver *solver, ParticleIterator *iterator, float dt) {
-    // Apply gravity to all particles
-    solver_apply_gravity(solver, iterator);
+    float sub_dt = dt / solver->sub_steps;
 
-    // Update positions of all particles and apply constraints
-    solver_update_positions_and_apply_constraints(solver, iterator, dt);
+    for (size_t i = 0; i < solver->sub_steps; ++i) {
+        // Apply gravity to all particles
+        solver_apply_gravity(solver, iterator);
 
-    // Solve collisions
-    solver_solve_collisions(solver, iterator);
+        // Update positions of all particles and apply constraints
+        solver_update_positions_and_apply_constraints(solver, iterator, sub_dt);
+
+        // Solve collisions
+        solver_solve_collisions(solver, iterator);
+    }
 }
 
 void solver_delete(Solver *solver) {

@@ -34,6 +34,20 @@ void solver_update_positions_and_apply_constraints(Solver *solver, ParticleItera
     }
 }
 
+void solver_solve_particle_collision(Particle *first, Particle *second) {
+    cm2_vec2 collision_axis = cm2_vec2_sub(first->position, second->position);
+    float dist = cm2_vec2_dist(collision_axis);
+
+    float radius_sum = first->radius + second->radius;
+    if (dist < radius_sum) {
+        cm2_vec2 normal = cm2_vec2_scale(collision_axis, 1.0 / dist);
+        float delta = radius_sum - dist;
+
+        first->position = cm2_vec2_add(first->position, cm2_vec2_scale(normal, 0.5 * delta));
+        second->position = cm2_vec2_sub(second->position, cm2_vec2_scale(normal, 0.5 * delta));
+    }
+}
+
 void solver_solve_collisions(Solver *solver, ParticleIterator *iterator) {
     iterator->reset(iterator);
     Particle *iter_1;
@@ -54,17 +68,7 @@ void solver_solve_collisions(Solver *solver, ParticleIterator *iterator) {
 
         Particle *iter_2;
         while ((iter_2 = iterator_copy.advance(&iterator_copy))) {
-            cm2_vec2 collision_axis = cm2_vec2_sub(iter_1->position, iter_2->position);
-            float dist = cm2_vec2_dist(collision_axis);
-
-            float radius_sum = iter_1->radius + iter_2->radius;
-            if (dist < radius_sum) {
-                cm2_vec2 normal = cm2_vec2_scale(collision_axis, 1.0 / dist);
-                float delta = radius_sum - dist;
-
-                iter_1->position = cm2_vec2_add(iter_1->position, cm2_vec2_scale(normal, 0.5 * delta));
-                iter_2->position = cm2_vec2_sub(iter_2->position, cm2_vec2_scale(normal, 0.5 * delta));
-            }
+            solver_solve_particle_collision(iter_1, iter_2);
         }
     }
 

@@ -15,6 +15,7 @@ typedef struct {
 } Solver;
 
 Solver solver_new(size_t sub_steps);
+void solver_solve_particle_collision(Particle *first, Particle *second);
 void solver_update(Solver *solver, ParticleIterator *iterator, float dt);
 void solver_delete(Solver *solver);
 

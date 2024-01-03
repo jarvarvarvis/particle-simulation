@@ -91,8 +91,7 @@ int main() {
     ParticleRenderer renderer = particle_renderer_new();
 
     ParticleList particles = particle_list_new();
-    ParticleGrid grid = particle_grid_new(16, 16, 50.0, 50.0); // 16 x 50 = 800
-    ParticleIterator iterator = particle_list_iterate(&particles);
+    ParticleGrid grid = particle_grid_new(16, 16, 50.0, 50.0); // 50 x 16 = 800
 
     const float SOLVER_SUB_STEPS = 8;
     const float SOLVER_DT = 0.01;
@@ -111,8 +110,8 @@ int main() {
     // Particle spawning
     struct timespec start_timer;
     clock_gettime(CLOCK_REALTIME, &start_timer);
-    float particle_spawn_time_interval = 2.0;
-    int particles_left_to_spawn = 100;
+    float particle_spawn_time_interval = 1.0;
+    int particles_left_to_spawn = 2;
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
@@ -139,12 +138,10 @@ int main() {
                 // Reset the clock
                 start_timer = current_timer;
             }
-
-            particle_grid_print(&grid);
         }
 
         // Update solver and upload data to GPU
-        solver_update(&solver, &iterator, SOLVER_DT);
+        solver_update_with_grid(&solver, &particles, &grid, SOLVER_DT);
         particle_renderer_upload_from_list(&renderer, &particles);
 
         // Draw
@@ -157,7 +154,6 @@ int main() {
     }
 
     solver_delete(&solver);
-    particle_iterator_delete(&iterator);
     particle_grid_delete(&grid);
     particle_list_delete(&particles);
     particle_renderer_delete(&renderer);

@@ -78,6 +78,15 @@ bool particle_grid_get_particle_grid_indices(
     return true;
 }
 
+ParticleGridCell *particle_grid_get_cell_of(ParticleGrid *grid, Particle *particle) {
+    size_t cell_x, cell_y;
+    if (!particle_grid_get_particle_grid_indices(grid, particle, &cell_x, &cell_y)) {
+        return NULL;
+    }
+
+    return particle_grid_get_cell(grid, cell_x, cell_y);
+}
+
 void particle_grid_insert(ParticleGrid *grid, size_t x, size_t y, long index) {
     ParticleGridCell *cell = particle_grid_get_cell(grid, x, y);
     if (cell == NULL) {
@@ -96,11 +105,52 @@ void particle_grid_insert_particle(ParticleGrid *grid, Particle *particle, long 
     particle_grid_insert(grid, cell_x, cell_y, index);
 }
 
+void particle_grid_update_moved_particle(ParticleGrid *grid, Particle *particle, long index) {
+    // Small hack to get the cell indices for the particle's last position
+    Particle temp_particle;
+    temp_particle.position = particle->last_position;
+    ParticleGridCell *old_cell = particle_grid_get_cell_of(grid, &temp_particle);
+    ParticleGridCell *new_cell = particle_grid_get_cell_of(grid, particle);
+
+    // Remove the index from the old cell and push it to the new cell
+    particle_grid_cell_remove(old_cell, index);
+    particle_grid_cell_push(new_cell, index);
+}
+
 void particle_grid_print(ParticleGrid *grid) {
     for (size_t y = 0; y < grid->height; ++y) {
         for (size_t x = 0; x < grid->width; ++x) {
-            ParticleGridCell *cell = particle_grid_get_cell(grid, x, y);
-            printf("[%02lu] ", cell->indices_len);
+            ParticleGridCell *cell = particle_grid_get_cell(grid, x, grid->height - y - 1);
+
+            size_t cell_particle_count = 0;
+            for (size_t i = 0; i < cell->indices_len; ++i) {
+                if (cell->indices[i] != PARTICLE_GRID_CELL_EMPTY) {
+                    cell_particle_count++;
+                }
+            }
+
+            printf("[%02lu] ", cell_particle_count);
+        }
+        printf("\n");
+    }
+}
+
+void particle_grid_print_full(ParticleGrid *grid) {
+    for (size_t y = 0; y < grid->height; ++y) {
+        for (size_t x = 0; x < grid->width; ++x) {
+            ParticleGridCell *cell = particle_grid_get_cell(grid, x, grid->height - y - 1);
+
+            printf("[");
+
+            size_t last_comma_index = cell->indices_len - 1;
+            for (size_t i = 0; i < cell->indices_len; ++i) {
+                printf("%02ld", cell->indices[i]);
+                if (i != last_comma_index) {
+                    printf(", ");
+                }
+            }
+
+            printf("] ");
         }
         printf("\n");
     }

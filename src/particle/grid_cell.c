@@ -42,11 +42,10 @@ void particle_grid_cell_push(ParticleGridCell *cell, long index) {
 
     // If no free index was found, insert at the end
     if (!free_index_found) next_free_index = cell->indices_len;
-
     cell->indices[next_free_index] = index;
 
-    // If the index was added at the end of the list, increment the length counter
-    if (next_free_index == cell->indices_len) {
+    // If the index was added at the end of the list, also increment the length counter
+    if (!free_index_found) {
         cell->indices_len++;
     }
 }

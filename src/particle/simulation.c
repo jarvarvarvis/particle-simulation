@@ -2,6 +2,8 @@
 
 #include <stdlib.h>
 
+#include "../../thirdparty/c_log.h"
+
 Solver solver_new(size_t sub_steps) {
     Solver solver;
     solver.sub_steps = sub_steps;
@@ -10,26 +12,22 @@ Solver solver_new(size_t sub_steps) {
     return solver;
 }
 
-void solver_apply_gravity(Solver *solver, ParticleIterator *iterator) {
-    iterator->reset(iterator);
-    Particle *iter_curr;
-
-    while ((iter_curr = iterator->advance(iterator))) {
-        particle_accelerate(iter_curr, solver->gravity);
+void solver_apply_gravity(Solver *solver, ParticleList *list) {
+    for (size_t i = 0; i < list->buffer_len; ++i) {
+        Particle *curr = &list->buffer[i];
+        particle_accelerate(curr, solver->gravity);
     }
 }
 
-void solver_update_positions_and_apply_constraints(Solver *solver, ParticleIterator *iterator, float dt) {
-    iterator->reset(iterator);
-    Particle *iter_curr;
-
-    while ((iter_curr = iterator->advance(iterator))) {
-        particle_update_position(iter_curr, dt);
+void solver_update_positions_and_apply_constraints(Solver *solver, ParticleList *list, float dt) {
+    for (size_t i = 0; i < list->buffer_len; ++i) {
+        Particle *curr = &list->buffer[i];
+        particle_update_position(curr, dt);
 
         Constraint *constraint = solver->constraint;
         if (constraint) {
             // If the particle is outside the constraint, move it back
-            constraint->apply(constraint, iter_curr);
+            constraint->apply(constraint, curr);
         }
     }
 }
@@ -48,45 +46,97 @@ void solver_solve_particle_collision(Particle *first, Particle *second) {
     }
 }
 
-void solver_solve_collisions(Solver *solver, ParticleIterator *iterator) {
-    iterator->reset(iterator);
-    Particle *iter_1;
-
-    // Create copy of iterator
-    ParticleIterator iterator_copy = iterator->copy(iterator);
-
-    int particles_handled = 0;
-    while ((iter_1 = iterator->advance(iterator))) {
-        particles_handled++;
-
-        iterator_copy.reset(&iterator_copy);
-
-        // Advance the second iterator so that only non-handled particles are left
-        for (int i = 0; i < particles_handled; ++i) {
-            iterator_copy.advance(&iterator_copy);
-        }
-
-        Particle *iter_2;
-        while ((iter_2 = iterator_copy.advance(&iterator_copy))) {
-            solver_solve_particle_collision(iter_1, iter_2);
+void solver_solve_collisions(Solver *solver, ParticleList *list) {
+    for (size_t first_idx = 0; first_idx < list->buffer_len; ++first_idx) {
+        Particle *first = &list->buffer[first_idx];
+        for (size_t second_idx = first_idx + 1; second_idx < list->buffer_len; ++second_idx) {
+            Particle *second = &list->buffer[second_idx];
+            solver_solve_particle_collision(first, second);
         }
     }
-
-    particle_iterator_delete(&iterator_copy);
 }
 
-void solver_update(Solver *solver, ParticleIterator *iterator, float dt) {
+void solver_solve_grid_cell_collisions(ParticleList *list, ParticleGridCell *first, ParticleGridCell *second) {
+    for (size_t first_idx = 0; first_idx < first->indices_len; ++first_idx) {
+        // If the current index in the first cell is empty (fragmentation can happen!), continue
+        long first_particle_idx = first->indices[first_idx];
+        if (first_particle_idx == PARTICLE_GRID_CELL_EMPTY) {
+            continue;
+        }
+
+        for (size_t second_idx = 0; second_idx < second->indices_len; ++second_idx) {
+            // If the current index in the second cell is empty (fragmentation can happen!), continue
+            long second_particle_idx = second->indices[second_idx];
+            if (second_particle_idx == PARTICLE_GRID_CELL_EMPTY) {
+                continue;
+            }
+
+            // Actually access the buffer
+            Particle *first_particle = &list->buffer[first_particle_idx];
+            Particle *second_particle = &list->buffer[second_particle_idx];
+
+            // Skip equal particles
+            if (first_particle == second_particle) {
+                continue;
+            }
+
+            solver_solve_particle_collision(first_particle, second_particle);
+        }
+    }
+}
+
+void solver_solve_collisions_with_grid(Solver *solver, ParticleList *list, ParticleGrid *grid) {
+    // Skip top and bottom rows
+    for (size_t y = 1; y < grid->height - 1; ++y) {
+        // Skip left and right columns
+        for (size_t x = 1; x < grid->width - 1; ++x) {
+            ParticleGridCell *first_cell = particle_grid_get_cell(grid, x, y);
+
+            // Iterate on all surround cells, including the current one
+            for (int dy = -1; dy <= 1; ++dy) {
+                for (int dx = -1; dx <= 1; ++dx) {
+                    ParticleGridCell *second_cell = particle_grid_get_cell(grid, x + dx, y + dy);
+
+                    solver_solve_grid_cell_collisions(list, first_cell, second_cell);
+                }
+            }
+        }
+    }
+}
+
+void solver_update(Solver *solver, ParticleList *list, float dt) {
     float sub_dt = dt / (float)solver->sub_steps;
 
     for (size_t i = 0; i < solver->sub_steps; ++i) {
         // Apply gravity to all particles
-        solver_apply_gravity(solver, iterator);
+        solver_apply_gravity(solver, list);
 
         // Update positions of all particles and apply constraints
-        solver_update_positions_and_apply_constraints(solver, iterator, sub_dt);
+        solver_update_positions_and_apply_constraints(solver, list, sub_dt);
 
         // Solve collisions
-        solver_solve_collisions(solver, iterator);
+        solver_solve_collisions(solver, list);
+    }
+}
+
+void solver_update_with_grid(Solver *solver, ParticleList *list, ParticleGrid *grid, float dt) {
+    float sub_dt = dt / (float)solver->sub_steps;
+
+    for (size_t i = 0; i < solver->sub_steps; ++i) {
+        // Apply gravity to all particles
+        solver_apply_gravity(solver, list);
+
+        // Update positions of all particles and apply constraints
+        solver_update_positions_and_apply_constraints(solver, list, sub_dt);
+
+        // Update particle grid positions
+        for (size_t i = 0; i < list->buffer_len; ++i) {
+            Particle *particle = &list->buffer[i];
+            particle_grid_update_moved_particle(grid, particle, i);
+        }
+
+        // Solve collisions
+        solver_solve_collisions_with_grid(solver, list, grid);
     }
 }
 

@@ -1,9 +1,10 @@
 #include "buffer.h"
 
 Buffer buffer_new(GLenum target) {
-    GLuint handle;
-    glGenBuffers(1, &handle);
-    return (Buffer) { target, handle };
+    Buffer buffer = {0};
+    buffer.target = target;
+    glGenBuffers(1, &buffer.handle);
+    return buffer;
 }
 
 void buffer_bind(Buffer *buffer) {

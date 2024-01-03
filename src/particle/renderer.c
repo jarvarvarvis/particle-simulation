@@ -51,26 +51,54 @@ ParticleRenderer particle_renderer_new() {
     char *vert_source = io_read_file("shaders/particle.vert");
     Shader vert_shader = shader_new(GL_VERTEX_SHADER);
     shader_compile_source(&vert_shader, vert_source);
-
-    c_log(C_LOG_SEVERITY_DEBUG, "Vertex shader source:\n%s", vert_source);
+    if (!shader_log_status(&vert_shader)) {
+        exit(EXIT_FAILURE);
+    }
 
     char *frag_source = io_read_file("shaders/particle.frag");
     Shader frag_shader = shader_new(GL_FRAGMENT_SHADER);
     shader_compile_source(&frag_shader, frag_source);
+    if (!shader_log_status(&vert_shader)) {
+        exit(EXIT_FAILURE);
+    }
 
-    c_log(C_LOG_SEVERITY_DEBUG, "Fragment shader source:\n%s", frag_source);
+    free(vert_source);
+    free(frag_source);
 
     // Create shader program
     ShaderProgram shader_program = shader_program_new();
     shader_program_attach(&shader_program, &vert_shader);
     shader_program_attach(&shader_program, &frag_shader);
     shader_program_link(&shader_program);
+    if (!shader_program_log_status(&shader_program)) {
+        exit(EXIT_FAILURE);
+    }
+
     renderer.shader_program = shader_program;
 
+    // Initialize GPU data
+    renderer.gpu_data = particle_gpu_data_new();
+
     return renderer;
+}
+
+void particle_renderer_upload_from_list(ParticleRenderer *particle_renderer, ParticleList *particle_list) {
+    particle_list_upload(particle_list, &particle_renderer->gpu_data);
+}
+
+void particle_renderer_draw(ParticleRenderer *particle_renderer) {
+    particle_gpu_data_bind_buffers(&particle_renderer->gpu_data);
+
+    buffer_bind(&particle_renderer->particle_mesh.ebo);
+    vao_bind(&particle_renderer->particle_mesh.vao);
+    shader_program_use(&particle_renderer->shader_program);
+
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0,
+            particle_renderer->gpu_data.particle_count);
 }
 
 void particle_renderer_delete(ParticleRenderer *particle_renderer) {
     particle_mesh_delete(&particle_renderer->particle_mesh);
     shader_program_delete(&particle_renderer->shader_program);
+    particle_gpu_data_delete(&particle_renderer->gpu_data);
 }

@@ -33,6 +33,8 @@ void shader_program_set_int(ShaderProgram *shader_program, char *name, int value
 void shader_program_set_float(ShaderProgram *shader_program, char *name, float value);
 void shader_program_set_mat4(ShaderProgram *shader_program, char *name, cm2_mat4 value);
 
+void shader_program_use(ShaderProgram *shader_program);
+
 void shader_program_delete(ShaderProgram *shader_program);
 
 #endif /* SHADER_H */

@@ -1,9 +1,9 @@
 #include "vao.h"
 
 Vao vao_new() {
-    GLuint handle;
-    glGenVertexArrays(1, &handle);
-    return (Vao) { handle };
+    Vao vao = {0};
+    glGenVertexArrays(1, &vao.handle);
+    return vao;
 }
 
 void vao_bind(Vao *vao) {

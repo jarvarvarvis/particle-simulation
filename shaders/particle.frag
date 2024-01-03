@@ -9,5 +9,5 @@ void main() {
     float rsq = dot(frag_pos, frag_pos);
     if (rsq > 1.0)
         discard;
-    frag_color = circle_color;
+    frag_color = min(1.0, 1.0 - rsq + 0.35) * circle_color;
 }

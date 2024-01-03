@@ -123,7 +123,7 @@ int main() {
             float elapsed_millis = time_diff_ms(start_timer, current_timer);
             if (elapsed_millis > particle_spawn_time_interval) {
                 // Create random particle
-                Particle particle = particle_new(0.0, 0.0, 5.0, frand(), frand(), frand(), 1.0);
+                Particle particle = particle_new(0.0, 0.0, 7.0, frand(), frand(), frand(), 1.0);
 
                 // Add velocity around circle, based on counter (achieves spiral motion)
                 particle.position.x += sinf((float)particles_left_to_spawn * 0.1) * 2.0;

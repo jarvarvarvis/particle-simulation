@@ -14,6 +14,7 @@
 
 #include "opengl/debug.h"
 #include "camera/orthographic.h"
+#include "particle/grid.h"
 #include "particle/renderer.h"
 #include "particle/simulation.h"
 #include "particle/constraint.h"
@@ -90,6 +91,8 @@ int main() {
     ParticleRenderer renderer = particle_renderer_new();
 
     ParticleList particles = particle_list_new();
+    ParticleGrid grid = particle_grid_new(15, 15);
+    particle_grid_print(&grid);
     ParticleIterator iterator = particle_list_iterate(&particles);
 
     const float SOLVER_SUB_STEPS = 8;
@@ -153,6 +156,7 @@ int main() {
 
     solver_delete(&solver);
     particle_iterator_delete(&iterator);
+    particle_grid_delete(&grid);
     particle_list_delete(&particles);
     particle_renderer_delete(&renderer);
 

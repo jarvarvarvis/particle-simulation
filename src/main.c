@@ -101,7 +101,7 @@ int main() {
             float x = (frand() * 2.0 - 1.0) * (user_data.window_width / 2.0);
             float y = (frand() * 2.0 - 1.0) * (user_data.window_height / 2.0);
             particle_list_push(&particles,
-                particle_new(x, y, frand() * 10.75 + 0.25, frand(), frand(), frand(), 1.0)
+                particle_new(x, y, frand() * 9.0 + 1.0, frand(), frand(), frand(), 1.0)
             );
         }
 

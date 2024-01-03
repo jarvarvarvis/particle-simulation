@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <float.h>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -37,6 +38,11 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 
 float frand() {
     return (float)rand() / RAND_MAX;
+}
+
+float time_diff_ms(struct timespec t0, struct timespec t1)
+{
+    return (t1.tv_sec - t0.tv_sec) * 1000.0f + (t1.tv_nsec - t0.tv_nsec) / 1000000.0f;
 }
 
 int main() {
@@ -81,21 +87,25 @@ int main() {
 
     // Create renderer, particle list and solver
     ParticleRenderer renderer = particle_renderer_new();
-    
+
     ParticleList particles = particle_list_new();
     ParticleIterator iterator = particle_list_iterate(&particles);
 
-    const float SOLVER_SUB_STEPS = 2;
+    const float SOLVER_SUB_STEPS = 8;
     const float SOLVER_DT = 0.01;
     Solver solver = solver_new(SOLVER_SUB_STEPS);
     solver.constraint = circular_constraint_new(cm2_vec2_new(0.0, 0.0), 400.0f);
-    
+
     // Initialize RNG
     struct timespec time;
     clock_gettime(CLOCK_REALTIME, &time);
     srand(time.tv_nsec);
 
-    int particles_left_to_spawn = 800;
+    // Particle spawning
+    struct timespec start_timer;
+    clock_gettime(CLOCK_REALTIME, &start_timer);
+    float particle_spawn_time_interval = 30.0;
+    int particles_left_to_spawn = 300;
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
@@ -103,11 +113,25 @@ int main() {
 
         // Spawn particles
         if (particles_left_to_spawn > 0) {
-            float x = (frand() * 2.0 - 1.0) * 0.5;
-            particle_list_push(&particles,
-                particle_new(x, 200.0, frand() * 10.0 + 5.0, frand(), frand(), frand(), 1.0)
-            );
-            particles_left_to_spawn--;
+            struct timespec current_timer;
+            clock_gettime(CLOCK_REALTIME, &current_timer);
+            float elapsed_millis = time_diff_ms(start_timer, current_timer);
+            if (elapsed_millis > particle_spawn_time_interval) {
+                // Create random particle
+                float x = (frand() * 2.0 - 1.0) * 2.0;
+                Particle particle = particle_new(x, 100.0, 10.0, frand(), frand(), frand(), 1.0);
+
+                // Add some random velocity in circle around center
+                particle.position.x += sinf((float)particles_left_to_spawn * 0.1) * 2.0;
+                particle.position.y += cosf((float)particles_left_to_spawn * 0.1) * 2.0;
+
+                // Push the particle to the list and decrease particle counter
+                particle_list_push(&particles, particle);
+                particles_left_to_spawn--;
+
+                // Reset the clock
+                start_timer = current_timer;
+            }
         }
 
         // Update solver and upload data to GPU

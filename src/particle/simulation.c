@@ -2,8 +2,6 @@
 
 #include <stdlib.h>
 
-#include "../../thirdparty/c_log.h"
-
 Solver solver_new(size_t sub_steps) {
     Solver solver;
     solver.sub_steps = sub_steps;
@@ -76,7 +74,7 @@ void solver_solve_collisions(Solver *solver, ParticleIterator *iterator) {
 }
 
 void solver_update(Solver *solver, ParticleIterator *iterator, float dt) {
-    float sub_dt = dt / solver->sub_steps;
+    float sub_dt = dt / (float)solver->sub_steps;
 
     for (size_t i = 0; i < solver->sub_steps; ++i) {
         // Apply gravity to all particles

@@ -3,7 +3,7 @@
 Particle particle_new(float x, float y, float radius, float r, float g, float b, float a) {
     Particle particle;
     particle.position = cm2_vec2_new(x, y);
-    particle.last_position = cm2_vec2_new(0.0, 0.0);
+    particle.last_position = particle.position;
     particle.acceleration = cm2_vec2_new(0.0, 0.0);
     particle.radius = radius;
 

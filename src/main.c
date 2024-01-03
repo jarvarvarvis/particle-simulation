@@ -14,6 +14,7 @@
 #include "opengl/debug.h"
 #include "camera/orthographic.h"
 #include "particle/renderer.h"
+#include "particle/simulation.h"
 
 typedef struct {
     OrthoCamera camera;
@@ -86,23 +87,9 @@ int main() {
     clock_gettime(CLOCK_REALTIME, &time);
     srand(time.tv_nsec);
 
-    // Create 10 bigger circles
-    for (int i = 0; i < 10; ++i) {
-        float x = (frand() * 2.0 - 1.0) * (user_data.window_width / 2.0);
-        float y = (frand() * 2.0 - 1.0) * (user_data.window_height / 2.0);
-        particle_list_push(&particles,
-            particle_new(x, y, 10.0, frand(), frand(), frand(), 1.0)
-        );
-    }
-
-    // Test the particle list iterator
+    const float SOLVER_DT = 0.02;
+    Solver solver = solver_new();
     ParticleIterator iterator = particle_list_iterate(&particles);
-    Particle *iter_curr;
-    while ((iter_curr = iterator.advance(&iterator))) {
-        cm2_vec2 pos = iter_curr->position;
-        c_log(C_LOG_SEVERITY_DEBUG, "Position: (%.2f, %.2f)", pos.x, pos.y);
-    }
-    particle_iterator_delete(&iterator);
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
@@ -112,9 +99,11 @@ int main() {
             float x = (frand() * 2.0 - 1.0) * (user_data.window_width / 2.0);
             float y = (frand() * 2.0 - 1.0) * (user_data.window_height / 2.0);
             particle_list_push(&particles,
-                particle_new(x, y, frand() * 4.75 + 0.25, frand(), frand(), frand(), 1.0)
+                particle_new(x, y, frand() * 10.75 + 0.25, frand(), frand(), frand(), 1.0)
             );
         }
+
+        solver_update(&solver, &iterator, SOLVER_DT);
 
         particle_renderer_upload_from_list(&renderer, &particles);
 

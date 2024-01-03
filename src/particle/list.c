@@ -69,6 +69,11 @@ Particle *particle_list_iterator_advance(ParticleIterator *iterator) {
     return particle;
 }
 
+void particle_list_iterator_reset(ParticleIterator *iterator) {
+    ParticleListIteratorState *iter = (ParticleListIteratorState *) iterator->state;
+    iter->current_idx = 0;
+}
+
 ParticleIterator particle_list_iterate(ParticleList *particle_list) {
     ParticleListIteratorState *iterator_state = (ParticleListIteratorState *)
         malloc(sizeof(ParticleListIteratorState));
@@ -76,9 +81,9 @@ ParticleIterator particle_list_iterate(ParticleList *particle_list) {
     iterator_state->list = particle_list;
 
     ParticleIterator iterator;
-    iterator.curr = NULL;
     iterator.state = iterator_state;
     iterator.advance = particle_list_iterator_advance;
+    iterator.reset = particle_list_iterator_reset;
 
     return iterator;
 }

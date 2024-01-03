@@ -43,6 +43,7 @@ static const cm2_mat4 CM2_MAT4_IDENTITY = {
 
 #ifndef C_MATH2D_DEFINITION
 
+cm2_vec2 cm2_vec2_new(float x, float y);
 cm2_vec4 cm2_vec4_new(float x, float y, float z, float w);
 
 float *cm2_mat4_value_ptr(cm2_mat4 mat);
@@ -59,6 +60,13 @@ void cm2_mat4_create_orthographic(
 void cm2_mat4_mul(cm2_mat4 out, cm2_mat4 first, cm2_mat4 second);
 
 #else
+
+cm2_vec2 cm2_vec2_new(float x, float y) {
+    cm2_vec2 v;
+    v.x = x;
+    v.y = y;
+    return v;
+}
 
 cm2_vec4 cm2_vec4_new(float x, float y, float z, float w) {
     cm2_vec4 v;

@@ -73,7 +73,11 @@ void particle_gpu_data_delete(ParticleGpuData *particle_gpu_data) {
 
 Particle particle_new(float x, float y, float radius, float r, float g, float b, float a) {
     Particle particle;
-    particle.position_and_radius = cm2_vec4_new(x, y, 0.0, radius);
+    particle.position = cm2_vec2_new(x, y);
+    particle.last_position = cm2_vec2_new(0.0, 0.0);
+    particle.acceleration = cm2_vec2_new(0.0, 0.0);
+    particle.radius = radius;
+
     particle.color = cm2_vec4_new(r, g, b, a);
     return particle;
 }
@@ -108,7 +112,8 @@ void particle_list_upload(ParticleList *particle_list, ParticleGpuData *gpu_data
     // Copy data from the particle list to the staging buffer
     for (int i = 0; i < particle_list->buffer_len; ++i)  {
         Particle *particle = &particle_list->buffer[i];
-        staging_buffer->position_and_radius_buffer[i] = particle->position_and_radius;
+        staging_buffer->position_and_radius_buffer[i] =
+            cm2_vec4_new(particle->position.x, particle->position.y, 0.0, particle->radius);
         staging_buffer->color_buffer[i] = particle->color;
     }
 

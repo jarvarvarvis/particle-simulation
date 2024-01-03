@@ -38,7 +38,11 @@ void particle_gpu_data_bind_buffers(ParticleGpuData *particle_gpu_data);
 void particle_gpu_data_delete(ParticleGpuData *particle_gpu_data);
 
 typedef struct {
-    cm2_vec4 position_and_radius;
+    cm2_vec2 position;
+    cm2_vec2 last_position;
+    cm2_vec2 acceleration;
+    float radius;
+
     cm2_vec4 color;
 } Particle;
 

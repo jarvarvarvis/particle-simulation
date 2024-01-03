@@ -7,10 +7,12 @@ struct ParticleIterator;
 
 typedef Particle* (*ParticleIteratorAdvanceFn)(struct ParticleIterator *iterator);
 typedef void (*ParticleIteratorResetFn)(struct ParticleIterator *iterator);
+typedef struct ParticleIterator (*ParticleIteratorCopyFn)(struct ParticleIterator *iterator);
 
 struct ParticleIterator {
     void *state;
     ParticleIteratorAdvanceFn advance;
+    ParticleIteratorCopyFn copy;
     ParticleIteratorResetFn reset;
 };
 

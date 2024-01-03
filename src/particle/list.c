@@ -58,20 +58,25 @@ void particle_list_upload(ParticleList *particle_list, ParticleGpuData *gpu_data
 }
 
 Particle *particle_list_iterator_advance(ParticleIterator *iterator) {
-    ParticleListIteratorState *iter = (ParticleListIteratorState *) iterator->state;
-    ParticleList *list = iter->list;
-    if (iter->current_idx >= list->buffer_len) {
+    ParticleListIteratorState *list_iter = (ParticleListIteratorState *) iterator->state;
+    ParticleList *list = list_iter->list;
+    if (list_iter->current_idx >= list->buffer_len) {
         return NULL;
     }
 
-    Particle *particle = &list->buffer[iter->current_idx];
-    iter->current_idx++;
+    Particle *particle = &list->buffer[list_iter->current_idx];
+    list_iter->current_idx++;
     return particle;
 }
 
+ParticleIterator particle_list_iterator_copy(ParticleIterator *iterator) {
+    ParticleListIteratorState *list_iter = (ParticleListIteratorState *) iterator->state;
+    return particle_list_iterate(list_iter->list);
+}
+
 void particle_list_iterator_reset(ParticleIterator *iterator) {
-    ParticleListIteratorState *iter = (ParticleListIteratorState *) iterator->state;
-    iter->current_idx = 0;
+    ParticleListIteratorState *list_iter = (ParticleListIteratorState *) iterator->state;
+    list_iter->current_idx = 0;
 }
 
 ParticleIterator particle_list_iterate(ParticleList *particle_list) {
@@ -83,8 +88,8 @@ ParticleIterator particle_list_iterate(ParticleList *particle_list) {
     ParticleIterator iterator;
     iterator.state = iterator_state;
     iterator.advance = particle_list_iterator_advance;
+    iterator.copy = particle_list_iterator_copy;
     iterator.reset = particle_list_iterator_reset;
-
     return iterator;
 }
 

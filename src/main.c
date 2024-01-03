@@ -94,7 +94,7 @@ int main() {
     clock_gettime(CLOCK_REALTIME, &time);
     srand(time.tv_nsec);
 
-    int particles_left_to_spawn = 300;
+    int particles_left_to_spawn = 500;
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
@@ -104,7 +104,7 @@ int main() {
         if (particles_left_to_spawn > 0) {
             float x = (frand() * 2.0 - 1.0) * 200.0;
             particle_list_push(&particles,
-                particle_new(x, 0.0, frand() * 9.0 + 1.0, frand(), frand(), frand(), 1.0)
+                particle_new(x, 0.0, frand() * 10.0 + 3.0, frand(), frand(), frand(), 1.0)
             );
             particles_left_to_spawn--;
         }

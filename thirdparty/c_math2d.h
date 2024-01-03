@@ -46,6 +46,11 @@ static const cm2_mat4 CM2_MAT4_IDENTITY = {
 cm2_vec2 cm2_vec2_new(float x, float y);
 cm2_vec4 cm2_vec4_new(float x, float y, float z, float w);
 
+cm2_vec2 cm2_vec2_additive_inv(cm2_vec2 vec);
+cm2_vec2 cm2_vec2_add(cm2_vec2 first, cm2_vec2 second);
+cm2_vec2 cm2_vec2_sub(cm2_vec2 first, cm2_vec2 second);
+cm2_vec2 cm2_vec2_scale(cm2_vec2 vec, float scalar);
+
 float *cm2_mat4_value_ptr(cm2_mat4 mat);
 void cm2_mat4_create_identity(cm2_mat4 out);
 void cm2_mat4_create_translation(cm2_mat4 out, cm2_vec3 pos);
@@ -74,6 +79,31 @@ cm2_vec4 cm2_vec4_new(float x, float y, float z, float w) {
     v.y = y;
     v.z = z;
     v.w = w;
+    return v;
+}
+
+cm2_vec2 cm2_vec2_additive_inv(cm2_vec2 vec) {
+    cm2_vec2 inv_vec;
+    inv_vec.x = -vec.x;
+    inv_vec.y = -vec.y;
+    return inv_vec;
+}
+
+cm2_vec2 cm2_vec2_add(cm2_vec2 first, cm2_vec2 second) {
+    cm2_vec2 v;
+    v.x = first.x + second.x;
+    v.y = first.y + second.y;
+    return v;
+}
+
+cm2_vec2 cm2_vec2_sub(cm2_vec2 first, cm2_vec2 second) {
+    return cm2_vec2_add(first, cm2_vec2_additive_inv(second));
+}
+
+cm2_vec2 cm2_vec2_scale(cm2_vec2 vec, float scalar) {
+    cm2_vec2 v;
+    v.x = vec.x * scalar;
+    v.y = vec.y * scalar;
     return v;
 }
 

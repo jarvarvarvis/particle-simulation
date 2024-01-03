@@ -71,17 +71,6 @@ void particle_gpu_data_delete(ParticleGpuData *particle_gpu_data) {
     particle_gpu_data_staging_buffer_delete(&particle_gpu_data->staging_buffer);
 }
 
-Particle particle_new(float x, float y, float radius, float r, float g, float b, float a) {
-    Particle particle;
-    particle.position = cm2_vec2_new(x, y);
-    particle.last_position = cm2_vec2_new(0.0, 0.0);
-    particle.acceleration = cm2_vec2_new(0.0, 0.0);
-    particle.radius = radius;
-
-    particle.color = cm2_vec4_new(r, g, b, a);
-    return particle;
-}
-
 ParticleList particle_list_new() {
     ParticleList list;
     list.buffer_len = 0;

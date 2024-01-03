@@ -50,7 +50,7 @@ int main() {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 
-    const int WIDTH = 1000, HEIGHT = 800;
+    const int WIDTH = 1200, HEIGHT = 800;
     GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "particle-simulation",
             NULL, NULL);
 
@@ -86,19 +86,19 @@ int main() {
     clock_gettime(CLOCK_REALTIME, &time);
     srand(time.tv_nsec);
 
-    for (int i = 0; i < 10000; ++i) {
-        float x = (frand() * 2.0 - 1.0) * (user_data.window_width / 2.0);
-        float y = (frand() * 2.0 - 1.0) * (user_data.window_height / 2.0);
-        particle_list_push(&particles,
-            particle_new(x, y, 2.0, frand(), frand(), frand(), 1.0)
-        );
-    }
-
-    particle_renderer_upload_from_list(&renderer, &particles);
-
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
         glClearColor(0.0, 0.0, 0.0, 1.0);
+
+        {
+            float x = (frand() * 2.0 - 1.0) * (user_data.window_width / 2.0);
+            float y = (frand() * 2.0 - 1.0) * (user_data.window_height / 2.0);
+            particle_list_push(&particles,
+                particle_new(x, y, 3.0, frand(), frand(), frand(), 1.0)
+            );
+        }
+
+        particle_renderer_upload_from_list(&renderer, &particles);
 
         shader_program_use(&renderer.shader_program);
         shader_program_set_mat4(&renderer.shader_program, "_MProj", user_data.camera.projection_matrix);

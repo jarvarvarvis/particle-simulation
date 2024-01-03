@@ -19,7 +19,7 @@ void particle_mesh_delete(ParticleMesh *particle_mesh);
 typedef struct {
     ParticleMesh particle_mesh;
     ShaderProgram shader_program;
-    ParticleGPUData gpu_data;
+    ParticleGpuData gpu_data;
 } ParticleRenderer;
 
 ParticleRenderer particle_renderer_new();

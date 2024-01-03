@@ -5,8 +5,40 @@
 
 #include "../../thirdparty/c_log.h"
 
-ParticleGPUData particle_gpu_data_new() {
-    ParticleGPUData data;
+ParticleGpuDataStagingBuffer particle_gpu_data_staging_buffer_new() {
+    ParticleGpuDataStagingBuffer staging_buffer;
+    size_t capacity = PARTICLE_GPU_DATA_STAGING_BUFFER_INITIAL_CAP;
+    staging_buffer.position_and_radius_buffer = (cm2_vec4 *) malloc(sizeof(cm2_vec4) * capacity);
+    staging_buffer.color_buffer = (cm2_vec4 *) malloc(sizeof(cm2_vec4) * capacity);
+    staging_buffer.capacity = capacity;
+
+    c_log(C_LOG_SEVERITY_DEBUG, "Staging buffer allocation: size = %lu", capacity);
+
+    return staging_buffer;
+}
+
+void particle_gpu_data_staging_buffer_resize(ParticleGpuDataStagingBuffer *staging_buffer, size_t new_cap) {
+    if (new_cap <= staging_buffer->capacity) {
+        // Don't reallocate if the new capacity is less than the current capacity
+        return;
+    }
+
+    c_log(C_LOG_SEVERITY_DEBUG, "Staging buffer reallocation: size = %lu", new_cap);
+
+    staging_buffer->position_and_radius_buffer = (cm2_vec4 *)
+        realloc(staging_buffer->position_and_radius_buffer, sizeof(cm2_vec4) * new_cap);
+    staging_buffer->color_buffer = (cm2_vec4 *)
+        realloc(staging_buffer->color_buffer, sizeof(cm2_vec4) * new_cap);
+    staging_buffer->capacity = new_cap;
+}
+
+void particle_gpu_data_staging_buffer_delete(ParticleGpuDataStagingBuffer *staging_buffer) {
+    free(staging_buffer->position_and_radius_buffer);
+    free(staging_buffer->color_buffer);
+}
+
+ParticleGpuData particle_gpu_data_new() {
+    ParticleGpuData data;
 
     // Set vertex attribute pointer for position and radius buffer
     data.position_and_radius_buffer = buffer_new(GL_ARRAY_BUFFER);
@@ -22,17 +54,21 @@ ParticleGPUData particle_gpu_data_new() {
     glEnableVertexAttribArray(2);
     glVertexAttribDivisor(2, 1);
 
+    // Create staging buffer
+    data.staging_buffer = particle_gpu_data_staging_buffer_new();
+
     return data;
 }
 
-void particle_gpu_data_bind_buffers(ParticleGPUData *particle_gpu_data) {
+void particle_gpu_data_bind_buffers(ParticleGpuData *particle_gpu_data) {
     buffer_bind(&particle_gpu_data->position_and_radius_buffer);
     buffer_bind(&particle_gpu_data->color_buffer);
 }
 
-void particle_gpu_data_delete(ParticleGPUData *particle_gpu_data) {
+void particle_gpu_data_delete(ParticleGpuData *particle_gpu_data) {
     buffer_delete(&particle_gpu_data->position_and_radius_buffer);
     buffer_delete(&particle_gpu_data->color_buffer);
+    particle_gpu_data_staging_buffer_delete(&particle_gpu_data->staging_buffer);
 }
 
 Particle particle_new(float x, float y, float radius, float r, float g, float b, float a) {
@@ -65,28 +101,31 @@ void particle_list_push(ParticleList *particle_list, Particle particle) {
     particle_list->buffer_len += 1;
 }
 
-void particle_list_upload(ParticleList *particle_list, ParticleGPUData *gpu_data) {
-    // Create temporary buffers for the particle position/radius and colors
-    int buf_size = sizeof(cm2_vec4) * particle_list->buffer_len;
+void particle_list_upload(ParticleList *particle_list, ParticleGpuData *gpu_data) {
+    ParticleGpuDataStagingBuffer *staging_buffer = &gpu_data->staging_buffer;
+    particle_gpu_data_staging_buffer_resize(staging_buffer, particle_list->buffer_cap);
 
-    cm2_vec4 *positions_and_radii = (cm2_vec4 *) malloc(buf_size);
-    cm2_vec4 *colors = (cm2_vec4 *) malloc(buf_size);
-
+    // Copy data from the particle list to the staging buffer
     for (int i = 0; i < particle_list->buffer_len; ++i)  {
-        Particle particle = particle_list->buffer[i];
-        positions_and_radii[i] = particle.position_and_radius;
-        colors[i] = particle.color;
+        Particle *particle = &particle_list->buffer[i];
+        staging_buffer->position_and_radius_buffer[i] = particle->position_and_radius;
+        staging_buffer->color_buffer[i] = particle->color;
     }
 
-    // Upload data to the GPU
+    // Upload position/radius and color data to the GPU
     buffer_bind(&gpu_data->position_and_radius_buffer);
-    buffer_upload_data_static(&gpu_data->position_and_radius_buffer, positions_and_radii, buf_size);
-    buffer_bind(&gpu_data->color_buffer);
-    buffer_upload_data_static(&gpu_data->color_buffer, colors, buf_size);
+    buffer_upload_data_static(
+        &gpu_data->position_and_radius_buffer,
+        staging_buffer->position_and_radius_buffer,
+        sizeof(cm2_vec4) * particle_list->buffer_len
+    );
 
-    // Free temporary buffers
-    free(positions_and_radii);
-    free(colors);
+    buffer_bind(&gpu_data->color_buffer);
+    buffer_upload_data_static(
+        &gpu_data->color_buffer,
+        staging_buffer->color_buffer,
+        sizeof(cm2_vec4) * particle_list->buffer_len
+    );
 
     // Update particle count
     gpu_data->particle_count = particle_list->buffer_len;

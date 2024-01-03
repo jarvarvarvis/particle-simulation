@@ -38,14 +38,4 @@ ParticleGpuData particle_gpu_data_new();
 void particle_gpu_data_bind_buffers(ParticleGpuData *particle_gpu_data);
 void particle_gpu_data_delete(ParticleGpuData *particle_gpu_data);
 
-typedef struct {
-    Particle *buffer;
-    size_t buffer_len, buffer_cap;
-} ParticleList;
-
-ParticleList particle_list_new();
-void particle_list_push(ParticleList *particle_list, Particle particle);
-void particle_list_upload(ParticleList *particle_list, ParticleGpuData *gpu_data);
-void particle_list_delete(ParticleList *particle_list);
-
 #endif /* PARTICLE_DATA_H */

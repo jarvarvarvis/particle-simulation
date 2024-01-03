@@ -86,6 +86,24 @@ int main() {
     clock_gettime(CLOCK_REALTIME, &time);
     srand(time.tv_nsec);
 
+    // Create 10 bigger circles
+    for (int i = 0; i < 10; ++i) {
+        float x = (frand() * 2.0 - 1.0) * (user_data.window_width / 2.0);
+        float y = (frand() * 2.0 - 1.0) * (user_data.window_height / 2.0);
+        particle_list_push(&particles,
+            particle_new(x, y, 10.0, frand(), frand(), frand(), 1.0)
+        );
+    }
+
+    // Test the particle list iterator
+    ParticleIterator iterator = particle_list_iterate(&particles);
+    Particle *iter_curr;
+    while ((iter_curr = iterator.advance(&iterator))) {
+        cm2_vec2 pos = iter_curr->position;
+        c_log(C_LOG_SEVERITY_DEBUG, "Position: (%.2f, %.2f)", pos.x, pos.y);
+    }
+    particle_iterator_delete(&iterator);
+
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
         glClearColor(0.0, 0.0, 0.0, 1.0);

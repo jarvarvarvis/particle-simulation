@@ -6,6 +6,7 @@
 #include "../opengl/shader.h"
 
 #include "data.h"
+#include "list.h"
 
 typedef struct {
     Vao vao;

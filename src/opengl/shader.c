@@ -1,5 +1,7 @@
 #include "shader.h"
 
+#include "../util/io.h"
+
 #include "../../thirdparty/c_log.h"
 
 Shader shader_new(GLenum type) {
@@ -44,6 +46,37 @@ void shader_delete(Shader *shader) {
 ShaderProgram shader_program_new() {
     GLuint handle = glCreateProgram();
     return (ShaderProgram) { handle };
+}
+
+ShaderProgram shader_program_load_from_file(char *vert_path, char *frag_path) {
+    // Read shaders from file
+    char *vert_source = io_read_file(vert_path);
+    Shader vert_shader = shader_new(GL_VERTEX_SHADER);
+    shader_compile_source(&vert_shader, vert_source);
+    if (!shader_log_status(&vert_shader)) {
+        exit(EXIT_FAILURE);
+    }
+
+    char *frag_source = io_read_file(frag_path);
+    Shader frag_shader = shader_new(GL_FRAGMENT_SHADER);
+    shader_compile_source(&frag_shader, frag_source);
+    if (!shader_log_status(&vert_shader)) {
+        exit(EXIT_FAILURE);
+    }
+
+    free(vert_source);
+    free(frag_source);
+
+    // Create shader program
+    ShaderProgram shader_program = shader_program_new();
+    shader_program_attach(&shader_program, &vert_shader);
+    shader_program_attach(&shader_program, &frag_shader);
+    shader_program_link(&shader_program);
+    if (!shader_program_log_status(&shader_program)) {
+        exit(EXIT_FAILURE);
+    }
+
+    return shader_program;
 }
 
 void shader_program_attach(ShaderProgram *shader_program, Shader *shader) {
@@ -95,6 +128,11 @@ void shader_program_set_int(ShaderProgram *shader_program, char *name, int value
 void shader_program_set_float(ShaderProgram *shader_program, char *name, float value) {
     GLint location = shader_program_get_uniform_location(shader_program, name);
     glUniform1i(location, value);
+}
+
+void shader_program_set_vec4(ShaderProgram *shader_program, char *name, cm2_vec4 value) {
+    GLint location = shader_program_get_uniform_location(shader_program, name);
+    glUniform4f(location, value.x, value.y, value.z, value.w);
 }
 
 void shader_program_set_mat4(ShaderProgram *shader_program, char *name, cm2_mat4 value) {

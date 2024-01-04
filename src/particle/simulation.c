@@ -1,6 +1,7 @@
 #include "simulation.h"
 
 #include <stdlib.h>
+#include <float.h>
 
 #include "../../thirdparty/c_log.h"
 
@@ -36,6 +37,11 @@ void solver_solve_particle_collision(Particle *first, Particle *second) {
     cm2_vec2 collision_axis = cm2_vec2_sub(first->position, second->position);
     float dist = cm2_vec2_dist(collision_axis);
 
+    // If distance is zero, do nothing
+    if (fabs(dist) < FLT_EPSILON) {
+        return;
+    }
+
     float radius_sum = first->radius + second->radius;
     if (dist < radius_sum) {
         cm2_vec2 normal = cm2_vec2_scale(collision_axis, 1.0 / dist);
@@ -57,49 +63,15 @@ void solver_solve_collisions(Solver *solver, ParticleList *list) {
 }
 
 void solver_solve_grid_cell_collisions(ParticleList *list, ParticleGridCell *first, ParticleGridCell *second) {
-    for (size_t first_idx = 0; first_idx < first->indices_len; ++first_idx) {
-        // If the current index in the first cell is empty (fragmentation can happen!), continue
-        long first_particle_idx = first->indices[first_idx];
-        if (first_particle_idx == PARTICLE_GRID_CELL_EMPTY) {
-            continue;
-        }
 
-        for (size_t second_idx = 0; second_idx < second->indices_len; ++second_idx) {
-            // If the current index in the second cell is empty (fragmentation can happen!), continue
-            long second_particle_idx = second->indices[second_idx];
-            if (second_particle_idx == PARTICLE_GRID_CELL_EMPTY) {
-                continue;
-            }
-
-            // Actually access the buffer
-            Particle *first_particle = &list->buffer[first_particle_idx];
-            Particle *second_particle = &list->buffer[second_particle_idx];
-
-            // Skip equal particles
-            if (first_particle == second_particle) {
-                continue;
-            }
-
-            solver_solve_particle_collision(first_particle, second_particle);
-        }
-    }
 }
 
 void solver_solve_collisions_with_grid(Solver *solver, ParticleList *list, ParticleGrid *grid) {
-    // Skip top and bottom rows
-    for (size_t y = 1; y < grid->height - 1; ++y) {
-        // Skip left and right columns
-        for (size_t x = 1; x < grid->width - 1; ++x) {
-            ParticleGridCell *first_cell = particle_grid_get_cell(grid, x, y);
-
-            // Iterate on all surround cells, including the current one
-            for (int dy = -1; dy <= 1; ++dy) {
-                for (int dx = -1; dx <= 1; ++dx) {
-                    ParticleGridCell *second_cell = particle_grid_get_cell(grid, x + dx, y + dy);
-
-                    solver_solve_grid_cell_collisions(list, first_cell, second_cell);
-                }
-            }
+    for (size_t first_idx = 0; first_idx < list->buffer_len; ++first_idx) {
+        Particle *first = &list->buffer[first_idx];
+        for (size_t second_idx = first_idx + 1; second_idx < list->buffer_len; ++second_idx) {
+            Particle *second = &list->buffer[second_idx];
+            solver_solve_particle_collision(first, second);
         }
     }
 }

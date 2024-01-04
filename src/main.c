@@ -15,6 +15,7 @@
 #include "opengl/debug.h"
 #include "camera/orthographic.h"
 #include "particle/grid.h"
+#include "particle/grid_renderer.h"
 #include "particle/renderer.h"
 #include "particle/simulation.h"
 #include "particle/constraint.h"
@@ -91,7 +92,6 @@ int main() {
     ParticleRenderer renderer = particle_renderer_new();
 
     ParticleList particles = particle_list_new();
-    ParticleGrid grid = particle_grid_new(16, 16, 50.0, 50.0); // 50 x 16 = 800
 
     const float SOLVER_SUB_STEPS = 8;
     const float SOLVER_DT = 0.01;
@@ -102,6 +102,14 @@ int main() {
         cm2_vec2_new(400.0, 400.0)
     );
 
+    // Create grid and grid renderer
+    ParticleGrid grid = particle_grid_new(16, 16, 50.0, 50.0); // 50 x 16 = 800
+    GridRenderer grid_renderer = grid_renderer_new();
+    grid_renderer.grid_width = (float)grid.width;
+    grid_renderer.grid_height = (float)grid.height;
+    grid_renderer.cell_width = (float)grid.cell_width;
+    grid_renderer.cell_height = (float)grid.cell_height;
+
     // Initialize RNG
     struct timespec time;
     clock_gettime(CLOCK_REALTIME, &time);
@@ -111,7 +119,7 @@ int main() {
     struct timespec start_timer;
     clock_gettime(CLOCK_REALTIME, &start_timer);
     float particle_spawn_time_interval = 1.0;
-    int particles_left_to_spawn = 2;
+    int particles_left_to_spawn = 10;
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
@@ -144,7 +152,12 @@ int main() {
         solver_update_with_grid(&solver, &particles, &grid, SOLVER_DT);
         particle_renderer_upload_from_list(&renderer, &particles);
 
-        // Draw
+        // Draw grid
+        shader_program_use(&grid_renderer.shader_program);
+        shader_program_set_mat4(&grid_renderer.shader_program, "_MProj", user_data.camera.projection_matrix);
+        grid_renderer_draw(&grid_renderer);
+
+        // Draw particles
         shader_program_use(&renderer.shader_program);
         shader_program_set_mat4(&renderer.shader_program, "_MProj", user_data.camera.projection_matrix);
         particle_renderer_draw(&renderer);
@@ -156,6 +169,8 @@ int main() {
     solver_delete(&solver);
     particle_grid_delete(&grid);
     particle_list_delete(&particles);
+
+    grid_renderer_delete(&grid_renderer);
     particle_renderer_delete(&renderer);
 
     glfwDestroyWindow(window);

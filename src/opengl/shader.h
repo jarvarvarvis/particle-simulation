@@ -22,6 +22,7 @@ typedef struct {
 } ShaderProgram;
 
 ShaderProgram shader_program_new();
+ShaderProgram shader_program_load_from_file(char *vert_path, char *frag_path);
 
 void shader_program_attach(ShaderProgram *shader_program, Shader *shader);
 void shader_program_link(ShaderProgram *shader_program);
@@ -31,6 +32,7 @@ GLint shader_program_get_uniform_location(ShaderProgram *shader_program, char *n
 void shader_program_set_bool(ShaderProgram *shader_program, char *name, bool value);
 void shader_program_set_int(ShaderProgram *shader_program, char *name, int value);
 void shader_program_set_float(ShaderProgram *shader_program, char *name, float value);
+void shader_program_set_vec4(ShaderProgram *shader_program, char *name, cm2_vec4 value);
 void shader_program_set_mat4(ShaderProgram *shader_program, char *name, cm2_mat4 value);
 
 void shader_program_use(ShaderProgram *shader_program);

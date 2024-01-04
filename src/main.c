@@ -14,6 +14,7 @@
 
 #include "opengl/debug.h"
 #include "camera/orthographic.h"
+#include "particle/grid.h"
 #include "particle/grid_renderer.h"
 #include "particle/renderer.h"
 #include "particle/simulation.h"
@@ -91,22 +92,26 @@ int main() {
     ParticleRenderer renderer = particle_renderer_new();
 
     ParticleList particles = particle_list_new();
+    ParticleGrid particle_grid = particle_grid_new(28, 20, 40, 40);
 
-    const float SOLVER_SUB_STEPS = 8;
+    const float SOLVER_SUB_STEPS = 4;
     const float SOLVER_DT = 0.01;
     Solver solver = solver_new(SOLVER_SUB_STEPS);
-    //solver.constraint = circular_constraint_new(cm2_vec2_new(0.0, 0.0), 400.0f);
+
+    // Create constraint
+    float particle_grid_half_width  = particle_grid.width  * particle_grid.cell_width  / 2.;
+    float particle_grid_half_height = particle_grid.height * particle_grid.cell_height / 2.;
     solver.constraint = box_constraint_new(
-        cm2_vec2_new(-400.0, -400.0),
-        cm2_vec2_new(400.0, 400.0)
+        cm2_vec2_new(-particle_grid_half_width, -particle_grid_half_height),
+        cm2_vec2_new( particle_grid_half_width,  particle_grid_half_height)
     );
 
     // Create grid and grid renderer
     GridRenderer grid_renderer = grid_renderer_new();
-    grid_renderer.grid_width = (float)20;
-    grid_renderer.grid_height = (float)20;
-    grid_renderer.cell_width = (float)40;
-    grid_renderer.cell_height = (float)40;
+    grid_renderer.grid_width = (float)particle_grid.width;
+    grid_renderer.grid_height = (float)particle_grid.height;
+    grid_renderer.cell_width = (float)particle_grid.cell_width;
+    grid_renderer.cell_height = (float)particle_grid.cell_height;
 
     // Initialize RNG
     struct timespec time;
@@ -116,8 +121,8 @@ int main() {
     // Particle spawning
     struct timespec start_timer;
     clock_gettime(CLOCK_REALTIME, &start_timer);
-    float particle_spawn_time_interval = 1.0;
-    int particles_left_to_spawn = 300;
+    float particle_spawn_time_interval = 0.5;
+    int particles_left_to_spawn = 1000;
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
@@ -129,24 +134,30 @@ int main() {
             clock_gettime(CLOCK_REALTIME, &current_timer);
             float elapsed_millis = time_diff_ms(start_timer, current_timer);
             if (elapsed_millis > particle_spawn_time_interval) {
-                // Create random particle
-                Particle particle = particle_new(0.0, 0.0, 7.0, frand(), frand(), frand(), 1.0);
+                float x_positions[] = { -200.0, 200.0 };
+                size_t x_positions_len = sizeof(x_positions)/sizeof(float);
 
-                // Add velocity around circle, based on counter (achieves spiral motion)
-                particle.position.x += sinf((float)particles_left_to_spawn * 0.1) * 2.0;
-                particle.position.y += cosf((float)particles_left_to_spawn * 0.1) * 2.0;
+                for (int i = 0; i < x_positions_len; ++i) {
+                    // Create random particle
+                    Particle particle = particle_new(x_positions[i], 0.0, 9.0, frand(), frand(), frand(), 1.0);
 
-                // Push the particle to the list and decrease particle counter
-                particle_list_push(&particles, particle);
+                    // Add velocity around circle, based on counter (achieves spiral motion)
+                    particle.position.x += sinf((float)particles_left_to_spawn * 0.1) * 5.0;
+                    particle.position.y += cosf((float)particles_left_to_spawn * 0.1) * 5.0;
+
+                    // Push the particle to the list and decrease particle counter
+                    particle_list_push(&particles, particle);
+
+                    // Reset the clock
+                    start_timer = current_timer;
+                }
+
                 particles_left_to_spawn--;
-
-                // Reset the clock
-                start_timer = current_timer;
             }
         }
 
         // Update solver and upload data to GPU
-        solver_update(&solver, &particles, SOLVER_DT);
+        solver_update_with_grid(&solver, &particles, &particle_grid, SOLVER_DT);
         particle_renderer_upload_from_list(&renderer, &particles);
 
         // Draw grid
@@ -164,6 +175,7 @@ int main() {
     }
 
     solver_delete(&solver);
+    particle_grid_delete(&particle_grid);
     particle_list_delete(&particles);
 
     grid_renderer_delete(&grid_renderer);

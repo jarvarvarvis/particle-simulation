@@ -14,7 +14,6 @@
 
 #include "opengl/debug.h"
 #include "camera/orthographic.h"
-#include "particle/grid.h"
 #include "particle/grid_renderer.h"
 #include "particle/renderer.h"
 #include "particle/simulation.h"
@@ -103,12 +102,11 @@ int main() {
     );
 
     // Create grid and grid renderer
-    ParticleGrid grid = particle_grid_new(16, 16, 50.0, 50.0); // 50 x 16 = 800
     GridRenderer grid_renderer = grid_renderer_new();
-    grid_renderer.grid_width = (float)grid.width;
-    grid_renderer.grid_height = (float)grid.height;
-    grid_renderer.cell_width = (float)grid.cell_width;
-    grid_renderer.cell_height = (float)grid.cell_height;
+    grid_renderer.grid_width = (float)20;
+    grid_renderer.grid_height = (float)20;
+    grid_renderer.cell_width = (float)40;
+    grid_renderer.cell_height = (float)40;
 
     // Initialize RNG
     struct timespec time;
@@ -119,7 +117,7 @@ int main() {
     struct timespec start_timer;
     clock_gettime(CLOCK_REALTIME, &start_timer);
     float particle_spawn_time_interval = 1.0;
-    int particles_left_to_spawn = 10;
+    int particles_left_to_spawn = 300;
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
@@ -140,7 +138,6 @@ int main() {
 
                 // Push the particle to the list and decrease particle counter
                 particle_list_push(&particles, particle);
-                particle_grid_insert_particle(&grid, &particle, particles.buffer_len - 1);
                 particles_left_to_spawn--;
 
                 // Reset the clock
@@ -149,7 +146,7 @@ int main() {
         }
 
         // Update solver and upload data to GPU
-        solver_update_with_grid(&solver, &particles, &grid, SOLVER_DT);
+        solver_update(&solver, &particles, SOLVER_DT);
         particle_renderer_upload_from_list(&renderer, &particles);
 
         // Draw grid
@@ -167,7 +164,6 @@ int main() {
     }
 
     solver_delete(&solver);
-    particle_grid_delete(&grid);
     particle_list_delete(&particles);
 
     grid_renderer_delete(&grid_renderer);

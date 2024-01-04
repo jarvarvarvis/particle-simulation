@@ -62,20 +62,6 @@ void solver_solve_collisions(Solver *solver, ParticleList *list) {
     }
 }
 
-void solver_solve_grid_cell_collisions(ParticleList *list, ParticleGridCell *first, ParticleGridCell *second) {
-
-}
-
-void solver_solve_collisions_with_grid(Solver *solver, ParticleList *list, ParticleGrid *grid) {
-    for (size_t first_idx = 0; first_idx < list->buffer_len; ++first_idx) {
-        Particle *first = &list->buffer[first_idx];
-        for (size_t second_idx = first_idx + 1; second_idx < list->buffer_len; ++second_idx) {
-            Particle *second = &list->buffer[second_idx];
-            solver_solve_particle_collision(first, second);
-        }
-    }
-}
-
 void solver_update(Solver *solver, ParticleList *list, float dt) {
     float sub_dt = dt / (float)solver->sub_steps;
 
@@ -88,27 +74,6 @@ void solver_update(Solver *solver, ParticleList *list, float dt) {
 
         // Solve collisions
         solver_solve_collisions(solver, list);
-    }
-}
-
-void solver_update_with_grid(Solver *solver, ParticleList *list, ParticleGrid *grid, float dt) {
-    float sub_dt = dt / (float)solver->sub_steps;
-
-    for (size_t i = 0; i < solver->sub_steps; ++i) {
-        // Apply gravity to all particles
-        solver_apply_gravity(solver, list);
-
-        // Update positions of all particles and apply constraints
-        solver_update_positions_and_apply_constraints(solver, list, sub_dt);
-
-        // Update particle grid positions
-        for (size_t i = 0; i < list->buffer_len; ++i) {
-            Particle *particle = &list->buffer[i];
-            particle_grid_update_moved_particle(grid, particle, i);
-        }
-
-        // Solve collisions
-        solver_solve_collisions_with_grid(solver, list, grid);
     }
 }
 

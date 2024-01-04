@@ -11,7 +11,7 @@ void main() {
     vec2 cell_size = grid_scale.zw;
 
     const float FACE = 0.07;
-    const float EDGE = 0.3;
+    const float EDGE = 0.2;
     vec2 size = 1.0 / grid_size;   // size of the tile
     vec2 edge = size/32.0;         // size of the edge
 

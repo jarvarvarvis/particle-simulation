@@ -2,6 +2,8 @@
 
 build_type="$1"
 
+mkdir -p build/
+
 if [[ $build_type == "debug" ]]; then
     cd build/
     mkdir -p debug/

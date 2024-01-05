@@ -10,4 +10,4 @@ In the future, I might implement a quadtree, but this is currently not planned.
 
 ## TODOs
 
-- [ ] Use multithreading to speed up collision computations
+- [x] Use multithreading to speed up collision computations

@@ -20,5 +20,6 @@ add_executable(${PROJECT_NAME} ${HEADER_FILES} ${SOURCE_FILES})
 set(LIBS ${LIBS}
         ${OPENGL_LIBRARIES}
         ${GLEW_LIBRARIES}
-        m glfw)
+        m glfw
+        pthread)
 target_link_libraries(${PROJECT_NAME} ${LIBS})

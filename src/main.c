@@ -92,11 +92,15 @@ int main() {
     ParticleRenderer renderer = particle_renderer_new();
 
     ParticleList particles = particle_list_new();
-    ParticleGrid particle_grid = particle_grid_new(112, 80, 10, 10);
+    ParticleGrid particle_grid = particle_grid_new(56, 40, 20, 20);
 
     const float SOLVER_SUB_STEPS = 8;
     const float SOLVER_DT = 0.004;
     Solver solver = solver_new(SOLVER_SUB_STEPS);
+    SolverParallelizationArgs parallelization_args;
+
+    // Split grid into 8 sections (section width = 56 / 8 = 7)
+    parallelization_args.section_count = 8;
 
     // Create constraint
     float particle_grid_half_width  = particle_grid.width  * particle_grid.cell_width  / 2.;
@@ -121,39 +125,36 @@ int main() {
     // Particle spawning
     struct timespec start_timer;
     clock_gettime(CLOCK_REALTIME, &start_timer);
-    float particle_spawn_time_interval = 10.0;
-    int particles_batches_left_to_spawn = 2000;
+    float particle_spawn_time_interval = 1.0;
+    int particle_batches_left_to_spawn = 3500;
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
         glClearColor(0.0, 0.0, 0.0, 1.0);
 
         // Spawn particles
-        if (particles_batches_left_to_spawn > 0) {
+        if (particle_batches_left_to_spawn > 0) {
             struct timespec current_timer;
             clock_gettime(CLOCK_REALTIME, &current_timer);
             float elapsed_millis = time_diff_ms(start_timer, current_timer);
             if (elapsed_millis > particle_spawn_time_interval) {
-                int count_particles_at_once = 3;
-                for (int i = 0; i < count_particles_at_once; ++i) {
-                    // Create random particle
-                    Particle particle = particle_new(
-                        -particle_grid_half_width + 10.0, particle_grid_half_height - 500.0,
-                        3.0,
-                        frand(), frand(), frand(), 1.0
-                    );
+                // Create random particle
+                Particle particle = particle_new(
+                    -particle_grid_half_width + 20.0, particle_grid_half_height - 200.0,
+                    7.0,
+                    frand(), frand(), frand(), 1.0
+                );
 
-                    // Add velocity to particle
-                    particle.position.x += 1.0;
-                    particle.position.y += 1.0 + sinf(particles_batches_left_to_spawn * 0.05) * 0.2;
+                // Add velocity to particle
+                particle.position.x += 2.0;
+                particle.position.y -= 0.2 + sinf(particle_batches_left_to_spawn * 0.05) * 0.2;
 
-                    // Push the particle to the list
-                    particle_list_push(&particles, particle);
-                }
+                // Push the particle to the list
+                particle_list_push(&particles, particle);
 
                 // Decrease counter and reset the clock
-                particles_batches_left_to_spawn--;
                 start_timer = current_timer;
+                particle_batches_left_to_spawn--;
             }
         }
 
@@ -163,7 +164,7 @@ int main() {
         glfwSetWindowTitle(window, title);
 
         // Update solver and upload data to GPU
-        solver_update_with_grid(&solver, &particles, &particle_grid, SOLVER_DT);
+        solver_update_parallel_with_grid(&solver, &particles, &particle_grid, &parallelization_args, SOLVER_DT);
         particle_renderer_upload_from_list(&renderer, &particles);
 
         // Draw grid

@@ -92,10 +92,10 @@ int main() {
     ParticleRenderer renderer = particle_renderer_new();
 
     ParticleList particles = particle_list_new();
-    ParticleGrid particle_grid = particle_grid_new(28, 20, 40, 40);
+    ParticleGrid particle_grid = particle_grid_new(112, 80, 10, 10);
 
-    const float SOLVER_SUB_STEPS = 4;
-    const float SOLVER_DT = 0.01;
+    const float SOLVER_SUB_STEPS = 8;
+    const float SOLVER_DT = 0.004;
     Solver solver = solver_new(SOLVER_SUB_STEPS);
 
     // Create constraint
@@ -121,40 +121,46 @@ int main() {
     // Particle spawning
     struct timespec start_timer;
     clock_gettime(CLOCK_REALTIME, &start_timer);
-    float particle_spawn_time_interval = 0.5;
-    int particles_left_to_spawn = 1000;
+    float particle_spawn_time_interval = 10.0;
+    int particles_batches_left_to_spawn = 2000;
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
         glClearColor(0.0, 0.0, 0.0, 1.0);
 
         // Spawn particles
-        if (particles_left_to_spawn > 0) {
+        if (particles_batches_left_to_spawn > 0) {
             struct timespec current_timer;
             clock_gettime(CLOCK_REALTIME, &current_timer);
             float elapsed_millis = time_diff_ms(start_timer, current_timer);
             if (elapsed_millis > particle_spawn_time_interval) {
-                float x_positions[] = { -200.0, 200.0 };
-                size_t x_positions_len = sizeof(x_positions)/sizeof(float);
-
-                for (int i = 0; i < x_positions_len; ++i) {
+                int count_particles_at_once = 3;
+                for (int i = 0; i < count_particles_at_once; ++i) {
                     // Create random particle
-                    Particle particle = particle_new(x_positions[i], 0.0, 9.0, frand(), frand(), frand(), 1.0);
+                    Particle particle = particle_new(
+                        -particle_grid_half_width + 10.0, particle_grid_half_height - 500.0,
+                        3.0,
+                        frand(), frand(), frand(), 1.0
+                    );
 
-                    // Add velocity around circle, based on counter (achieves spiral motion)
-                    particle.position.x += sinf((float)particles_left_to_spawn * 0.1) * 5.0;
-                    particle.position.y += cosf((float)particles_left_to_spawn * 0.1) * 5.0;
+                    // Add velocity to particle
+                    particle.position.x += 1.0;
+                    particle.position.y += 1.0 + sinf(particles_batches_left_to_spawn * 0.05) * 0.2;
 
-                    // Push the particle to the list and decrease particle counter
+                    // Push the particle to the list
                     particle_list_push(&particles, particle);
-
-                    // Reset the clock
-                    start_timer = current_timer;
                 }
 
-                particles_left_to_spawn--;
+                // Decrease counter and reset the clock
+                particles_batches_left_to_spawn--;
+                start_timer = current_timer;
             }
         }
+
+        // Update title
+        char title[50];
+        sprintf(title, "particle-simulation - Particles: %lu", particles.buffer_len);
+        glfwSetWindowTitle(window, title);
 
         // Update solver and upload data to GPU
         solver_update_with_grid(&solver, &particles, &particle_grid, SOLVER_DT);

@@ -11,9 +11,9 @@ void main() {
     vec2 cell_size = grid_scale.zw;
 
     const float FACE = 0.07;
-    const float EDGE = 0.2;
+    const float EDGE = 0.15;
     vec2 size = 1.0 / grid_size;   // size of the tile
-    vec2 edge = size/32.0;         // size of the edge
+    vec2 edge = size/8.0;         // size of the edge
 
     vec2 uv = (frag_pos + 1.0) * 0.5 + (edge / 2.); // Offset by edge/2. to make grid border a little tidier
     uv = sign(vec2(edge) - mod(uv, size));

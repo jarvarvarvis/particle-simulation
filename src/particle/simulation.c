@@ -9,7 +9,7 @@
 Solver solver_new(size_t sub_steps) {
     Solver solver;
     solver.sub_steps = sub_steps;
-    solver.gravity = cm2_vec2_new(0.0, -1000.0);
+    solver.gravity = cm2_vec2_new(0.0, -5000.0);
     solver.constraint = NULL;
     return solver;
 }

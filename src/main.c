@@ -39,7 +39,7 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
     ortho_camera_on_window_resize(&user_ptr->camera, width, height);
 }
 
-float frand() {
+float randf() {
     return (float)rand() / RAND_MAX;
 }
 
@@ -126,7 +126,7 @@ int main() {
     struct timespec start_timer;
     clock_gettime(CLOCK_REALTIME, &start_timer);
     float particle_spawn_time_interval = 1.0;
-    int particle_batches_left_to_spawn = 3500;
+    int particle_batches_left_to_spawn = 4000;
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
@@ -138,21 +138,38 @@ int main() {
             clock_gettime(CLOCK_REALTIME, &current_timer);
             float elapsed_millis = time_diff_ms(start_timer, current_timer);
             if (elapsed_millis > particle_spawn_time_interval) {
-                // Create random particle
-                Particle particle = particle_new(
-                    -particle_grid_half_width + 20.0, particle_grid_half_height - 200.0,
+                // Create random particle on the left side
+                Particle particle_left = particle_new(
+                    -particle_grid_half_width + 10.0, particle_grid_half_height - 10.0,
                     7.0,
-                    frand(), frand(), frand(), 1.0
+                    randf(), randf(), randf(), 1.0
                 );
 
                 // Add velocity to particle
-                particle.position.x += 2.0;
-                particle.position.y -= 0.2 + sinf(particle_batches_left_to_spawn * 0.05) * 0.2;
+                particle_left.position.x += randf() * 0.01;
+                particle_left.position.y -= 2.0 + sinf(particle_batches_left_to_spawn * 0.05) * 0.2;
 
                 // Push the particle to the list
-                particle_list_push(&particles, particle);
+                particle_list_push(&particles, particle_left);
 
-                // Decrease counter and reset the clock
+                // Decrease counter
+                particle_batches_left_to_spawn--;
+
+                // Create random particle on the right side
+                Particle particle_right = particle_new(
+                    particle_grid_half_width - 10.0, particle_grid_half_height - 10.0,
+                    7.0,
+                    randf(), randf(), randf(), 1.0
+                );
+
+                // Add velocity to particle
+                particle_right.position.x += randf() * 0.01;
+                particle_right.position.y -= 2.0 + sinf(particle_batches_left_to_spawn * 0.05) * 0.2;
+
+                // Push the particle to the list
+                particle_list_push(&particles, particle_right);
+
+                // Decrease counter again and reset clock
                 start_timer = current_timer;
                 particle_batches_left_to_spawn--;
             }

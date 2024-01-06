@@ -126,7 +126,7 @@ int main() {
     struct timespec start_timer;
     clock_gettime(CLOCK_REALTIME, &start_timer);
     float particle_spawn_time_interval = 1.0;
-    int particle_batches_left_to_spawn = 4000;
+    int particle_batches_left_to_spawn = 2000;
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
@@ -140,31 +140,28 @@ int main() {
             if (elapsed_millis > particle_spawn_time_interval) {
                 // Create random particle on the left side
                 Particle particle_left = particle_new(
-                    -particle_grid_half_width + 10.0, particle_grid_half_height - 10.0,
-                    7.0,
+                    -particle_grid_half_width + 15.0, particle_grid_half_height - 100,
+                    6.0,
                     randf(), randf(), randf(), 1.0
                 );
 
                 // Add velocity to particle
-                particle_left.position.x += randf() * 0.01;
-                particle_left.position.y -= 2.0 + sinf(particle_batches_left_to_spawn * 0.05) * 0.2;
+                particle_left.position.x += 1.7;
+                particle_left.position.y += 0.6;
 
                 // Push the particle to the list
                 particle_list_push(&particles, particle_left);
 
-                // Decrease counter
-                particle_batches_left_to_spawn--;
-
                 // Create random particle on the right side
                 Particle particle_right = particle_new(
-                    particle_grid_half_width - 10.0, particle_grid_half_height - 10.0,
-                    7.0,
+                    particle_grid_half_width - 15.0, particle_grid_half_height - 100,
+                    6.0,
                     randf(), randf(), randf(), 1.0
                 );
 
                 // Add velocity to particle
-                particle_right.position.x += randf() * 0.01;
-                particle_right.position.y -= 2.0 + sinf(particle_batches_left_to_spawn * 0.05) * 0.2;
+                particle_right.position.x -= 1.7;
+                particle_right.position.y += 0.6;
 
                 // Push the particle to the list
                 particle_list_push(&particles, particle_right);

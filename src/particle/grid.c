@@ -78,22 +78,22 @@ ParticleGridCell *particle_grid_cell_at(ParticleGrid *grid, size_t cell_x, size_
     return &grid->cells[cell_y * grid->width + cell_x];
 }
 
-bool particle_grid_insert(ParticleGrid *grid, Particle *particle) {
+bool particle_grid_insert_index_for_particle(ParticleGrid *grid, Particle *particle, ParticleGridCellIdx idx) {
     size_t cell_x, cell_y;
     if (!particle_grid_index_from_position(grid, particle, &cell_x, &cell_y)) {
         return false;
     }
 
     ParticleGridCell *cell = particle_grid_cell_at(grid, cell_x, cell_y);
-    particle_grid_cell_push(cell, particle);
+    particle_grid_cell_push(cell, idx);
 
     return true;
 }
 
 void particle_grid_insert_all(ParticleGrid *grid, ParticleList *list) {
-    for (size_t i = 0; i < list->buffer_len; ++i) {
-        Particle *particle = &list->buffer[i];
-        particle_grid_insert(grid, particle);
+    for (ParticleGridCellIdx idx = 0; idx < list->buffer_len; ++idx) {
+        Particle *particle = &list->buffer[idx];
+        particle_grid_insert_index_for_particle(grid, particle, idx);
     }
 }
 
@@ -118,13 +118,14 @@ void particle_grid_print_basic(ParticleGrid *grid) {
     }
 }
 
-void particle_grid_print_with_first_particle_pos(ParticleGrid *grid) {
+void particle_grid_print_with_first_particle_pos(ParticleGrid *grid, ParticleList *list) {
     for (size_t y = 0; y < grid->height; ++y) {
         for (size_t x = 0; x < grid->width; ++x) {
             ParticleGridCell *cell = &grid->cells[y * grid->width + x];
             Particle *particle = NULL;
             if (cell->buffer_len > 0) {
-                particle = cell->buffer[0];
+                ParticleGridCellIdx idx = cell->indices[0];
+                particle = &list->buffer[idx];
             }
 
             if (particle != NULL) {

@@ -75,12 +75,16 @@ void solver_update(Solver *solver, ParticleList *list, float dt) {
     }
 }
 
-void solver_solve_grid_cells(ParticleGridCell *cell, ParticleGridCell *other_cell) {
+void solver_solve_grid_cells(
+    ParticleList *list,
+    ParticleGridCell *cell,
+    ParticleGridCell *other_cell
+) {
     // Iterate over particles in both cells and solve collisions between them
-    for (size_t i = 0; i < other_cell->buffer_len; ++i) {
-        for (size_t j = 0; j < cell->buffer_len; ++j) {
-            Particle *first = other_cell->buffer[i];
-            Particle *second = cell->buffer[j];
+    for (size_t i = 0; i < cell->buffer_len; ++i) {
+        for (size_t j = 0; j < other_cell->buffer_len; ++j) {
+            Particle *first = &list->buffer[cell->indices[i]];
+            Particle *second = &list->buffer[other_cell->indices[j]];
 
             // Don't solve collision for same particle
             if (first == second) {
@@ -92,7 +96,12 @@ void solver_solve_grid_cells(ParticleGridCell *cell, ParticleGridCell *other_cel
     }
 }
 
-void solver_solve_grid_cell_neighbors(ParticleGrid *grid, ParticleGridCell *cell, size_t x, size_t y) {
+void solver_solve_grid_cell_neighbors(
+    ParticleList *list,
+    ParticleGrid *grid,
+    ParticleGridCell *cell,
+    size_t x, size_t y
+) {
     // Get cells in 3x3 grid around the current cell
     for (long dy = -1; dy <= 1; ++dy) {
         for (long dx = -1; dx <= 1; ++dx) {
@@ -108,17 +117,21 @@ void solver_solve_grid_cell_neighbors(ParticleGrid *grid, ParticleGridCell *cell
             }
 
             ParticleGridCell *other_cell = particle_grid_cell_at(grid, other_x, other_y);
-            solver_solve_grid_cells(cell, other_cell);
+            solver_solve_grid_cells(list, cell, other_cell);
         }
     }
 }
 
-void solver_solve_collisions_with_grid(Solver *solver, ParticleGrid *grid) {
+void solver_solve_collisions_with_grid(
+    Solver *solver,
+    ParticleList *list,
+    ParticleGrid *grid
+) {
     for (size_t y = 0; y < grid->height; ++y) {
         for (size_t x = 0; x < grid->width; ++x) {
             // Get the current cell and solve collisions with neighbors
             ParticleGridCell *cell = particle_grid_cell_at(grid, x, y);
-            solver_solve_grid_cell_neighbors(grid, cell, x, y);
+            solver_solve_grid_cell_neighbors(list, grid, cell, x, y);
         }
     }
 }
@@ -138,11 +151,12 @@ void solver_update_with_grid(Solver *solver, ParticleList *list, ParticleGrid *g
         particle_grid_insert_all(grid, list);
 
         // Solve collisions
-        solver_solve_collisions_with_grid(solver, grid);
+        solver_solve_collisions_with_grid(solver, list, grid);
     }
 }
 
 typedef struct {
+    ParticleList *list;
     ParticleGrid *grid;
     size_t start_x, end_x;
 } SectionSolverThreadArgs;
@@ -160,7 +174,7 @@ void *solver_solve_section(void *argvp) {
         for (size_t y = 0; y < grid->height; ++y) {
             // Get the current cell and solve collisions with neighbors
             ParticleGridCell *cell = particle_grid_cell_at(grid, x, y);
-            solver_solve_grid_cell_neighbors(grid, cell, x, y);
+            solver_solve_grid_cell_neighbors(args->list, grid, cell, x, y);
         }
     }
 
@@ -169,6 +183,7 @@ void *solver_solve_section(void *argvp) {
 
 void solver_solve_collisions_with_grid_parallel(
     Solver *solver,
+    ParticleList *list,
     ParticleGrid *grid,
     SolverParallelizationArgs *parallelization_args
 ) {
@@ -185,7 +200,8 @@ void solver_solve_collisions_with_grid_parallel(
     size_t curr_start_x = 0;
     size_t curr_end_x = section_width;
 
-    SectionSolverThreadArgs *args = (SectionSolverThreadArgs*) malloc(sizeof(SectionSolverThreadArgs) * section_count);
+    SectionSolverThreadArgs *args = (SectionSolverThreadArgs*)
+        malloc(sizeof(SectionSolverThreadArgs) * section_count);
     pthread_t thread_ids[section_count];
 
     // Create section arguments
@@ -210,6 +226,7 @@ void solver_solve_collisions_with_grid_parallel(
         }
 
         // Spawn the thread
+        args[i].list = list;
         args[i].grid = grid;
         args[i].start_x = curr_start_x;
         args[i].end_x = curr_end_x;
@@ -254,7 +271,7 @@ void solver_update_parallel_with_grid(
         particle_grid_insert_all(grid, list);
 
         // Solve collisions
-        solver_solve_collisions_with_grid_parallel(solver, grid, parallelization_args);
+        solver_solve_collisions_with_grid_parallel(solver, list, grid, parallelization_args);
     }
 }
 

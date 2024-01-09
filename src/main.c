@@ -9,14 +9,15 @@
 #define C_MATH2D_DEFINITION
 #include "../thirdparty/c_math2d.h"
 
+#include "camera/orthographic.h"
 #include "opengl/debug.h"
 #include "opengl/window.h"
-#include "camera/orthographic.h"
+#include "particle/constraint.h"
 #include "particle/grid.h"
 #include "particle/grid_renderer.h"
 #include "particle/renderer.h"
-#include "particle/simulation.h"
-#include "particle/constraint.h"
+#include "particle/solver/solver.h"
+#include "particle/solver/parallel_grid_based.h"
 #include "util/math.h"
 
 int main() {
@@ -56,16 +57,18 @@ int main() {
     // Create renderer, particle list and solver
     ParticleRenderer renderer = particle_renderer_new();
 
-    ParticleList particles = particle_list_new();
+    ParticleList particle_list = particle_list_new();
     ParticleGrid particle_grid = particle_grid_new(56, 40, 20, 20);
 
-    const float SOLVER_SUB_STEPS = 8;
-    const float SOLVER_DT = 0.004;
-    Solver solver = solver_new(SOLVER_SUB_STEPS);
-    SolverParallelizationArgs parallelization_args;
+    ParallelGridBasedSolverData solver_data;
+    solver_data.grid = &particle_grid;
+    solver_data.list = &particle_list;
+    solver_data.params.section_count = 8; // 56 / 8 = 7
 
-    // Split grid into 8 sections (section width = 56 / 8 = 7)
-    parallelization_args.section_count = 8;
+    const float SOLVER_DT = 0.004;
+    const float SOLVER_SUB_STEPS = 8;
+    Solver solver = solver_parallel_grid_based_new(solver_new(SOLVER_DT, SOLVER_SUB_STEPS));
+    solver.update_data = &solver_data;
 
     // Create constraint
     float particle_grid_half_width  = particle_grid.width  * particle_grid.cell_width  / 2.;
@@ -111,7 +114,7 @@ int main() {
                 particle_left.position.y += 0.6;
 
                 // Push the particle to the list
-                particle_list_push(&particles, particle_left);
+                particle_list_push(&particle_list, particle_left);
 
                 // Create random particle on the right side
                 Particle particle_right = particle_new(
@@ -125,7 +128,7 @@ int main() {
                 particle_right.position.y += 0.6;
 
                 // Push the particle to the list
-                particle_list_push(&particles, particle_right);
+                particle_list_push(&particle_list, particle_right);
 
                 // Decrease counter again and reset clock
                 start_timer = current_timer;
@@ -135,12 +138,12 @@ int main() {
 
         // Update title
         char title[50];
-        sprintf(title, "particle-simulation - Particles: %lu", particles.buffer_len);
+        sprintf(title, "particle-simulation - Particles: %lu", particle_list.buffer_len);
         glfwSetWindowTitle(window, title);
 
         // Update solver and upload data to GPU
-        solver_update_parallel_with_grid(&solver, &particles, &particle_grid, &parallelization_args, SOLVER_DT);
-        particle_renderer_upload_from_list(&renderer, &particles);
+        solver_update(&solver);
+        particle_renderer_upload_from_list(&renderer, &particle_list);
 
         // Draw grid
         shader_program_use(&grid_renderer.shader_program);
@@ -158,7 +161,7 @@ int main() {
 
     solver_delete(&solver);
     particle_grid_delete(&particle_grid);
-    particle_list_delete(&particles);
+    particle_list_delete(&particle_list);
 
     grid_renderer_delete(&grid_renderer);
     particle_renderer_delete(&renderer);

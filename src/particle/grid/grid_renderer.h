@@ -1,9 +1,9 @@
 #ifndef GRID_RENDERER_H
 #define GRID_RENDERER_H
 
-#include "../opengl/buffer.h"
-#include "../opengl/vao.h"
-#include "../opengl/shader.h"
+#include "../../opengl/buffer.h"
+#include "../../opengl/vao.h"
+#include "../../opengl/shader.h"
 
 #include "grid.h"
 

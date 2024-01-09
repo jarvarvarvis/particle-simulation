@@ -1,7 +1,7 @@
 #ifndef PARTICLE_GRID_CELL_H
 #define PARTICLE_GRID_CELL_H
 
-#include "particle.h"
+#include "../particle.h"
 
 #include <stdint.h>
 

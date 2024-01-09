@@ -2,8 +2,8 @@
 #define PARTICLE_GRID_H
 
 #include "grid_cell.h"
-#include "list.h"
-#include "particle.h"
+#include "../list.h"
+#include "../particle.h"
 
 #include <stdbool.h>
 

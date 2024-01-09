@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 #include "../constraint.h"
-#include "../grid.h"
+#include "../grid/grid.h"
 #include "../list.h"
 
 #include "../../../thirdparty/c_math2d.h"

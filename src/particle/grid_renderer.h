@@ -5,6 +5,8 @@
 #include "../opengl/vao.h"
 #include "../opengl/shader.h"
 
+#include "grid.h"
+
 typedef struct {
     Vao vao;
     Buffer vbo, ebo;
@@ -14,6 +16,7 @@ typedef struct {
 } GridRenderer;
 
 GridRenderer grid_renderer_new();
+GridRenderer grid_renderer_from_particle_grid(ParticleGrid *grid);
 void grid_renderer_draw(GridRenderer *grid_renderer);
 void grid_renderer_delete(GridRenderer *grid_renderer);
 

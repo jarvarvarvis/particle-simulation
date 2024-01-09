@@ -36,6 +36,16 @@ GridRenderer grid_renderer_new() {
     return renderer;
 }
 
+GridRenderer grid_renderer_from_particle_grid(ParticleGrid *grid) {
+    GridRenderer grid_renderer = grid_renderer_new();
+    grid_renderer.grid_width = (float)grid->width;
+    grid_renderer.grid_height = (float)grid->height;
+    grid_renderer.cell_width = (float)grid->cell_width;
+    grid_renderer.cell_height = (float)grid->cell_height;
+
+    return grid_renderer;
+}
+
 void grid_renderer_draw(GridRenderer *grid_renderer) {
     buffer_bind(&grid_renderer->ebo);
     vao_bind(&grid_renderer->vao);

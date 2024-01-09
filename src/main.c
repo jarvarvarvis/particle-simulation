@@ -1,10 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
-#include <float.h>
 
 #include <GL/glew.h>
-#include <GLFW/glfw3.h>
 
 #define C_LOG_DEFINITION
 #include "../thirdparty/c_log.h"
@@ -13,40 +10,14 @@
 #include "../thirdparty/c_math2d.h"
 
 #include "opengl/debug.h"
+#include "opengl/window.h"
 #include "camera/orthographic.h"
 #include "particle/grid.h"
 #include "particle/grid_renderer.h"
 #include "particle/renderer.h"
 #include "particle/simulation.h"
 #include "particle/constraint.h"
-
-typedef struct {
-    OrthoCamera camera;
-    int window_width, window_height;
-} WindowUserData;
-
-void error_callback(int error, const char *description) {
-    c_log(C_LOG_SEVERITY_ERROR, "%s (Code: %d)", description, error);
-}
-
-void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
-    glViewport(0, 0, width, height);
-    c_log(C_LOG_SEVERITY_DEBUG, "Window resize: %d,%d", width, height);
-
-    WindowUserData *user_ptr = (WindowUserData *) glfwGetWindowUserPointer(window);
-    user_ptr->window_width = width;
-    user_ptr->window_height = height;
-    ortho_camera_on_window_resize(&user_ptr->camera, width, height);
-}
-
-float randf() {
-    return (float)rand() / RAND_MAX;
-}
-
-float time_diff_ms(struct timespec t0, struct timespec t1)
-{
-    return (t1.tv_sec - t0.tv_sec) * 1000.0f + (t1.tv_nsec - t0.tv_nsec) / 1000000.0f;
-}
+#include "util/math.h"
 
 int main() {
     if (!glfwInit()) {
@@ -54,21 +25,17 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    glfwSetErrorCallback(error_callback);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
-
+    // Create window
     const int WIDTH = 1200, HEIGHT = 800;
-    GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "particle-simulation",
-            NULL, NULL);
-
-    if (!window) {
-        c_log(C_LOG_SEVERITY_ERROR, "Failed to create glfw window");
-        glfwTerminate();
-        exit(EXIT_FAILURE);
-    }
+    WindowParameters window_params;
+    window_params.context_version = version_new(3, 3);
+    window_params.opengl_profile = GLFW_OPENGL_CORE_PROFILE;
+    window_params.use_opengl_debug_context = true;
+    window_params.window_width = WIDTH;
+    window_params.window_height = HEIGHT;
+    window_params.window_title = "particle-simulation";
+    GLFWwindow *window = window_create_from_params(window_params);
+    glfwMakeContextCurrent(window);
 
     // Set up window user pointer
     WindowUserData user_data = {0};
@@ -77,9 +44,7 @@ int main() {
     user_data.window_height = HEIGHT;
     glfwSetWindowUserPointer(window, &user_data);
 
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwMakeContextCurrent(window);
-
+    // Initialize GLEW
     if (glewInit() != GLEW_OK) {
         c_log(C_LOG_SEVERITY_ERROR, "Failed to initialize GLEW");
         exit(EXIT_FAILURE);
@@ -110,12 +75,8 @@ int main() {
         cm2_vec2_new( particle_grid_half_width,  particle_grid_half_height)
     );
 
-    // Create grid and grid renderer
-    GridRenderer grid_renderer = grid_renderer_new();
-    grid_renderer.grid_width = (float)particle_grid.width;
-    grid_renderer.grid_height = (float)particle_grid.height;
-    grid_renderer.cell_width = (float)particle_grid.cell_width;
-    grid_renderer.cell_height = (float)particle_grid.cell_height;
+    // Create grid renderer
+    GridRenderer grid_renderer = grid_renderer_from_particle_grid(&particle_grid);
 
     // Initialize RNG
     struct timespec time;

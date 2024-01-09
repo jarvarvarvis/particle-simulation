@@ -13,7 +13,7 @@ typedef uint16_t ParticleGridCellIdx;
 
 typedef struct {
     ParticleGridCellIdx *indices;
-    size_t buffer_len, buffer_cap;
+    size_t indices_len, indices_cap;
 } ParticleGridCell;
 
 ParticleGridCell particle_grid_cell_new();

@@ -108,10 +108,10 @@ void particle_grid_print_basic(ParticleGrid *grid) {
     for (size_t y = 0; y < grid->height; ++y) {
         for (size_t x = 0; x < grid->width; ++x) {
             ParticleGridCell *cell = &grid->cells[y * grid->width + x];
-            if (cell->buffer_len == 0) {
+            if (cell->indices_len == 0) {
                 printf("[  ] ");
             } else {
-                printf("[%02lu] ", cell->buffer_len);
+                printf("[%02lu] ", cell->indices_len);
             }
         }
         printf("\n");
@@ -123,7 +123,7 @@ void particle_grid_print_with_first_particle_pos(ParticleGrid *grid, ParticleLis
         for (size_t x = 0; x < grid->width; ++x) {
             ParticleGridCell *cell = &grid->cells[y * grid->width + x];
             Particle *particle = NULL;
-            if (cell->buffer_len > 0) {
+            if (cell->indices_len > 0) {
                 ParticleGridCellIdx idx = cell->indices[0];
                 particle = &list->buffer[idx];
             }

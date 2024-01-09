@@ -7,8 +7,8 @@ void solver_grid_based_solve_grid_cells(
     ParticleGridCell *other_cell
 ) {
     // Iterate over particles in both cells and solve collisions between them
-    for (size_t i = 0; i < cell->buffer_len; ++i) {
-        for (size_t j = 0; j < other_cell->buffer_len; ++j) {
+    for (size_t i = 0; i < cell->indices_len; ++i) {
+        for (size_t j = 0; j < other_cell->indices_len; ++j) {
             Particle *first = &list->buffer[cell->indices[i]];
             Particle *second = &list->buffer[other_cell->indices[j]];
 

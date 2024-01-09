@@ -38,7 +38,7 @@ void solver_update_positions_and_apply_constraints(Solver *solver, ParticleList 
 
 void solver_solve_particle_collision(Particle *first, Particle *second) {
     cm2_vec2 collision_axis = cm2_vec2_sub(first->position, second->position);
-    float dist = cm2_vec2_dist(collision_axis);
+    float dist = cm2_vec2_length(collision_axis);
 
     float radius_sum = first->radius + second->radius;
     if (dist < radius_sum) {

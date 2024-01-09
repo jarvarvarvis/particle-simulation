@@ -10,7 +10,7 @@ void constraint_delete(Constraint *constraint) {
 void circular_constraint_apply(struct Constraint *constraint, Particle *particle) {
     CircularConstraint *constraint_data = (CircularConstraint*) constraint->data;
     cm2_vec2 to_obj = cm2_vec2_sub(particle->position, constraint_data->center);
-    float dist = cm2_vec2_dist(to_obj);
+    float dist = cm2_vec2_length(to_obj);
 
     float radius_diff = constraint_data->radius - particle->radius;
     if (dist > radius_diff) {

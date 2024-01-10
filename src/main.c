@@ -87,22 +87,22 @@ int main() {
     float grid_half_w = (particle_updater.particle_grid.width  * particle_updater.particle_grid.cell_width ) / 2.;
     float grid_half_h = (particle_updater.particle_grid.height * particle_updater.particle_grid.cell_height) / 2.;
     particle_updater.emitters[0] = particle_emitter_new(
-        1500,
+        1600,
         cm2_vec2_new(-grid_half_w + 10.0, grid_half_h - 10.0),
         cm2_vec2_new(1.3, -0.1),
         5.0
     );
     particle_updater.emitters[1] = particle_emitter_new(
-        1500,
-        cm2_vec2_new(grid_half_w - 20.0, grid_half_h - 10.0),
-        cm2_vec2_new(-1.3, -0.8),
-        6.0
-    );
-    particle_updater.emitters[2] = particle_emitter_new(
-        1000,
+        1600,
         cm2_vec2_new(0.0, grid_half_h - 10.0),
         cm2_vec2_new(0.01, -3.0),
-        7.0
+        8.0
+    );
+    particle_updater.emitters[2] = particle_emitter_new(
+        1600,
+        cm2_vec2_new(grid_half_w - 20.0, grid_half_h - 10.0),
+        cm2_vec2_new(-1.4, -0.8),
+        6.0
     );
 
     // Create grid renderer

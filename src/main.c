@@ -18,6 +18,7 @@
 #include "particle/renderer.h"
 #include "particle/solver/solver.h"
 #include "particle/solver/parallel_grid_based.h"
+#include "updater.h"
 #include "util/math.h"
 
 int main() {
@@ -54,96 +55,56 @@ int main() {
     // Register debug callback
     debug_register_message_callback();
 
-    // Create renderer, particle list and solver
+    // Create renderer and particle updater
     ParticleRenderer renderer = particle_renderer_new();
+    ParticleUpdater particle_updater = particle_updater_new(3);
+    particle_updater.particle_list = particle_list_new();
+    particle_updater.particle_grid = particle_grid_new(56, 40, 20, 20);
 
-    ParticleList particle_list = particle_list_new();
-    ParticleGrid particle_grid = particle_grid_new(56, 40, 20, 20);
-
+    // Create solver data
     ParallelGridBasedSolverData solver_data;
-    solver_data.grid = &particle_grid;
-    solver_data.list = &particle_list;
+    solver_data.grid = &particle_updater.particle_grid;
+    solver_data.list = &particle_updater.particle_list;
     solver_data.params.section_count = 8; // 56 / 8 = 7
 
-    const float SOLVER_DT = 0.004;
+    // Create solver
+    const float SOLVER_DT = 0.005;
     const float SOLVER_SUB_STEPS = 8;
-    Solver solver = solver_parallel_grid_based_new(solver_new(SOLVER_DT, SOLVER_SUB_STEPS));
-    solver.update_data = &solver_data;
+    particle_updater.solver = solver_parallel_grid_based_new(solver_new(SOLVER_DT, SOLVER_SUB_STEPS));
+    particle_updater.solver.update_data = &solver_data;
 
     // Create constraint
-    float particle_grid_half_width  = particle_grid.width  * particle_grid.cell_width  / 2.;
-    float particle_grid_half_height = particle_grid.height * particle_grid.cell_height / 2.;
-    solver.constraint = box_constraint_new(
-        cm2_vec2_new(-particle_grid_half_width, -particle_grid_half_height),
-        cm2_vec2_new( particle_grid_half_width,  particle_grid_half_height)
-    );
-
-    // Create grid renderer
-    GridRenderer grid_renderer = grid_renderer_from_particle_grid(&particle_grid);
+    particle_updater.solver.constraint = box_constraint_fit_grid(&particle_updater.particle_grid);
 
     // Initialize RNG
     struct timespec time;
     clock_gettime(CLOCK_REALTIME, &time);
     srand(time.tv_nsec);
 
-    // Particle spawning
-    struct timespec start_timer;
-    clock_gettime(CLOCK_REALTIME, &start_timer);
-    float particle_spawn_time_interval = 1.0;
-    int particle_batches_left_to_spawn = 2000;
+    // Create emitters
+    particle_updater.particle_spawn_time_interval = 1.0;
+
+    float grid_half_w = (particle_updater.particle_grid.width  * particle_updater.particle_grid.cell_width ) / 2.;
+    float grid_half_h = (particle_updater.particle_grid.height * particle_updater.particle_grid.cell_height) / 2.;
+    particle_updater.emitters[0] = particle_emitter_new(1500,  cm2_vec2_new(-grid_half_w + 10.0, grid_half_h - 10.0), cm2_vec2_new( 1.3,  -0.1), 5.0);
+    particle_updater.emitters[1] = particle_emitter_new(1500,  cm2_vec2_new( grid_half_w - 20.0, grid_half_h - 10.0), cm2_vec2_new(-1.3,  -0.8), 6.0);
+    particle_updater.emitters[2] = particle_emitter_new(1000,  cm2_vec2_new(                0.0, grid_half_h - 10.0), cm2_vec2_new( 0.01, -3.0), 7.0);
+
+    // Create grid renderer
+    GridRenderer grid_renderer = grid_renderer_from_particle_grid(&particle_updater.particle_grid);
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
         glClearColor(0.0, 0.0, 0.0, 1.0);
 
-        // Spawn particles
-        if (particle_batches_left_to_spawn > 0) {
-            struct timespec current_timer;
-            clock_gettime(CLOCK_REALTIME, &current_timer);
-            float elapsed_millis = time_diff_ms(start_timer, current_timer);
-            if (elapsed_millis > particle_spawn_time_interval) {
-                // Create random particle on the left side
-                Particle particle_left = particle_new(
-                    -particle_grid_half_width + 15.0, particle_grid_half_height - 100,
-                    6.0,
-                    randf(), randf(), randf(), 1.0
-                );
-
-                // Add velocity to particle
-                particle_left.position.x += 1.7;
-                particle_left.position.y += 0.6;
-
-                // Push the particle to the list
-                particle_list_push(&particle_list, particle_left);
-
-                // Create random particle on the right side
-                Particle particle_right = particle_new(
-                    particle_grid_half_width - 15.0, particle_grid_half_height - 100,
-                    6.0,
-                    randf(), randf(), randf(), 1.0
-                );
-
-                // Add velocity to particle
-                particle_right.position.x -= 1.7;
-                particle_right.position.y += 0.6;
-
-                // Push the particle to the list
-                particle_list_push(&particle_list, particle_right);
-
-                // Decrease counter again and reset clock
-                start_timer = current_timer;
-                particle_batches_left_to_spawn--;
-            }
-        }
-
         // Update title
         char title[50];
-        sprintf(title, "particle-simulation - Particles: %lu", particle_list.buffer_len);
+        sprintf(title, "particle-simulation - Particles: %lu", particle_updater.particle_list.buffer_len);
         glfwSetWindowTitle(window, title);
 
-        // Update solver and upload data to GPU
-        solver_update(&solver);
-        particle_renderer_upload_from_list(&renderer, &particle_list);
+        // Upload data to GPU
+        particle_updater_update(&particle_updater);
+        particle_renderer_upload_from_list(&renderer, &particle_updater.particle_list);
 
         // Draw grid
         shader_program_use(&grid_renderer.shader_program);
@@ -159,9 +120,7 @@ int main() {
         glfwPollEvents();
     }
 
-    solver_delete(&solver);
-    particle_grid_delete(&particle_grid);
-    particle_list_delete(&particle_list);
+    particle_updater_delete(&particle_updater);
 
     grid_renderer_delete(&grid_renderer);
     particle_renderer_delete(&renderer);

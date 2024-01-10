@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #include "particle.h"
+#include "grid/grid.h"
 
 struct Constraint;
 
@@ -33,5 +34,6 @@ typedef struct {
 } BoxConstraint;
 
 Constraint *box_constraint_new(cm2_vec2 min, cm2_vec2 max);
+Constraint *box_constraint_fit_grid(ParticleGrid *grid);
 
 #endif /* CONSTRAINT_H */

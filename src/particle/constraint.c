@@ -63,3 +63,13 @@ Constraint *box_constraint_new(cm2_vec2 min, cm2_vec2 max) {
     constraint->apply = box_constraint_apply;
     return constraint;
 }
+
+Constraint *box_constraint_fit_grid(ParticleGrid *grid) {
+    float particle_grid_half_width  = (grid->width  * grid->cell_width ) / 2.;
+    float particle_grid_half_height = (grid->height * grid->cell_height) / 2.;
+
+    return box_constraint_new(
+        cm2_vec2_new(-particle_grid_half_width, -particle_grid_half_height),
+        cm2_vec2_new( particle_grid_half_width,  particle_grid_half_height)
+    );
+}
